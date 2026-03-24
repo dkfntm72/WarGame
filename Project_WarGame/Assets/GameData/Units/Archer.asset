@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 038b04b8560b8c3488282c2401c92083, type: 3}
+  m_Name: Archer
+  m_EditorClassIdentifier: 
+  unitType: 1
+  unitName: Archer
+  maxHp: 60
+  attack: 20
+  defense: 0
+  moveRange: 2
+  attackRange: 3
+  goldCost: 60
+  playerAnimController: {fileID: 9100000, guid: e69e54e6f75584bf382ddbe934f532b6, type: 2}
+  playerIdleSprite: {fileID: -9045297040117572726, guid: 72c22f22ea5e4488390ba536cd5ab98d, type: 3}
+  enemyAnimController: {fileID: 9100000, guid: 098910b1e815348e6bba028403bec1e8, type: 2}
+  enemyIdleSprite: {fileID: -9045297040117572726, guid: 277a50fd24135436398811e3293b2aa2, type: 3}

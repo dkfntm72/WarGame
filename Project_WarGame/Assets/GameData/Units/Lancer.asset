@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 038b04b8560b8c3488282c2401c92083, type: 3}
+  m_Name: Lancer
+  m_EditorClassIdentifier: 
+  unitType: 2
+  unitName: Lancer
+  maxHp: 80
+  attack: 10
+  defense: 3
+  moveRange: 3
+  attackRange: 1
+  goldCost: 40
+  playerAnimController: {fileID: 9100000, guid: fa7ae5cd619544ca4a4ea82a50baa12d, type: 2}
+  playerIdleSprite: {fileID: -5592250592134132327, guid: 2307ce0d618cb4ea2be2cb2a4148cbde, type: 3}
+  enemyAnimController: {fileID: 9100000, guid: c0adc132f8afd46f6bb864d14269d701, type: 2}
+  enemyIdleSprite: {fileID: -5592250592134132327, guid: fba04cf817a7246ec99f9c85cf9ef600, type: 3}
