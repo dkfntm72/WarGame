@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1fc3c3516a0eb0844bd3fc5c4ba59902, type: 3}
+  m_Name: wall_config
+  m_EditorClassIdentifier: 
+  terrainType: 1
+  defaultTile: {fileID: 11400000, guid: 59d607d2caa1bb0419cb6681d4b3c292, type: 2}
+  rules:
+  - neighbors: ffffffffffffffffffffffffffffffff03000000ffffffff01000000ffffffff
+    tile: {fileID: 11400000, guid: a23a956511ff3476985e616f8ba37d0e, type: 2}
+  - neighbors: ffffffffffffffff01000000ffffffff03000000ffffffffffffffffffffffff
+    tile: {fileID: 11400000, guid: e07b3c0ce20724f5496a4b3b14c8d488, type: 2}
+  - neighbors: ffffffffffffffff01000000ffffffff03000000ffffffff01000000ffffffff
+    tile: {fileID: 11400000, guid: 51696b8cdf8634e489afb9651e1a6d08, type: 2}
+  - neighbors: ffffffffffffffff00000000ffffffff00000000ffffffff00000000ffffffff
+    tile: {fileID: 11400000, guid: b6bd22024a5ec474fa3417d068390786, type: 2}
+  - neighbors: ffffffffffffffff03000000ffffffff03000000ffffffff03000000ffffffff
+    tile: {fileID: 11400000, guid: 8b1ae67604b73463a96d8038c374f767, type: 2}
+  - neighbors: ffffffffffffffff01000000ffffffff00000000ffffffff01000000ffffffff
+    tile: {fileID: 11400000, guid: e98d371428f9d415f93ec1bab68123a5, type: 2}
+  - neighbors: ffffffffffffffff01000000ffffffff00000000ffffffffffffffffffffffff
+    tile: {fileID: 11400000, guid: 5cbcceb34df5749ebbe56896e9e0e729, type: 2}
+  - neighbors: ffffffffffffffffffffffffffffffff00000000ffffffff01000000ffffffff
+    tile: {fileID: 11400000, guid: d806a00e708af44379a74ec87cfe35ab, type: 2}

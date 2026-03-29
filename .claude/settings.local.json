@@ -31,7 +31,13 @@
       "mcp__coplay-mcp__get_animation_clip_data",
       "mcp__coplay-mcp__set_animation_clip_settings",
       "mcp__coplay-mcp__create_ui_element",
-      "mcp__coplay-mcp__read_file"
+      "mcp__coplay-mcp__read_file",
+      "mcp__coplay-mcp__set_ui_text",
+      "mcp__coplay-mcp__list_packages",
+      "mcp__coplay-mcp__install_unity_package",
+      "mcp__coplay-mcp__open_scene",
+      "mcp__coplay-mcp__scene_view_functions",
+      "Bash(xargs grep:*)"
     ]
   }
 }

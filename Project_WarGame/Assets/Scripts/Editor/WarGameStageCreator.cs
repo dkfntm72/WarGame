@@ -190,8 +190,6 @@ public static class WarGameStageCreator
         s.grassTile = AssetDatabase.LoadAssetAtPath<TileBase>(TileRoot + "Tilemap_color1_22.asset");
         // Sand/slope – color2
         s.slopeTile = AssetDatabase.LoadAssetAtPath<TileBase>(TileRoot + "Tilemap_color2_22.asset");
-        // Dark green (forest) – color3
-        s.treeTile  = AssetDatabase.LoadAssetAtPath<TileBase>(TileRoot + "Tilemap_color3_22.asset");
         // Stone/wall – color4
         s.wallTile  = AssetDatabase.LoadAssetAtPath<TileBase>(TileRoot + "Tilemap_color4_22.asset");
         // Water
@@ -268,8 +266,8 @@ public static class WarGameStageCreator
 
         foreach (int tx in new[] { 2, 7 })
         {
-            map.SetTerrain(tx, 0, TerrainType.Tree);
-            map.SetTerrain(tx, 7, TerrainType.Tree);
+            map.SetTerrain(tx, 0, TerrainType.Grass);
+            map.SetTerrain(tx, 7, TerrainType.Grass);
         }
 
         // 강 (대각선 방향으로 중앙을 가로지름)

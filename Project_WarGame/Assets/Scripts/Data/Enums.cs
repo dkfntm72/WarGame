@@ -19,7 +19,6 @@ public enum TerrainType
     Grass,
     Wall,
     Slope,
-    Tree,
     Water
 }
 

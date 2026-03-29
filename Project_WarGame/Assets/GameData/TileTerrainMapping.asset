@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e80a753662bc3f44b99a2e08671c01a7, type: 3}
+  m_Name: TileTerrainMapping
+  m_EditorClassIdentifier: 
+  entries:
+  - tile: {fileID: 11400000, guid: 3ea52188fe7254c5e93be5661febe3d0, type: 2}
+    terrainType: 0
+  - tile: {fileID: 11400000, guid: 242bafe81eecf43dcb46be2af6a99754, type: 2}
+    terrainType: 0
+  - tile: {fileID: 11400000, guid: d96f61a5d7a7940619d679ccc0883b03, type: 2}
+    terrainType: 0
+  - tile: {fileID: 11400000, guid: 9575383f01da845eaac37b6f24ad5b03, type: 2}
+    terrainType: 0
+  - tile: {fileID: 11400000, guid: 4bb032c7439164c5999f9e8fac64d238, type: 2}
+    terrainType: 0
+  - tile: {fileID: 11400000, guid: 4bb032c7439164c5999f9e8fac64d238, type: 2}
+    terrainType: 0
+  - tile: {fileID: 11400000, guid: cf73fb24f713a406fa9da2d5e07d5b58, type: 2}
+    terrainType: 0
+  - tile: {fileID: 11400000, guid: 5b82ebcb3bd834996a608db11a38b101, type: 2}
+    terrainType: 0
+  - tile: {fileID: 11400000, guid: 1edfb4ce7584841cb841d5f7f878f6e4, type: 2}
+    terrainType: 0
+  - tile: {fileID: 11400000, guid: e98d371428f9d415f93ec1bab68123a5, type: 2}
+    terrainType: 1
+  - tile: {fileID: 11400000, guid: d806a00e708af44379a74ec87cfe35ab, type: 2}
+    terrainType: 1
+  - tile: {fileID: 11400000, guid: 5cbcceb34df5749ebbe56896e9e0e729, type: 2}
+    terrainType: 1
+  - tile: {fileID: 11400000, guid: b6bd22024a5ec474fa3417d068390786, type: 2}
+    terrainType: 1
+  - tile: {fileID: 11400000, guid: e07b3c0ce20724f5496a4b3b14c8d488, type: 2}
+    terrainType: 1
+  - tile: {fileID: 11400000, guid: 51696b8cdf8634e489afb9651e1a6d08, type: 2}
+    terrainType: 1
+  - tile: {fileID: 11400000, guid: a23a956511ff3476985e616f8ba37d0e, type: 2}
+    terrainType: 1
+  - tile: {fileID: 11400000, guid: a23a956511ff3476985e616f8ba37d0e, type: 2}
+    terrainType: 1
+  - tile: {fileID: 11400000, guid: 0ad74858bf66441e9bc483fc0542c9a7, type: 2}
+    terrainType: 2
+  - tile: {fileID: 11400000, guid: cdc06edefecd445c1b38ad37d22d49f9, type: 2}
+    terrainType: 2
+  - tile: {fileID: 11400000, guid: 2dcad66f44a1a4327b5325f233c7ea40, type: 2}
+    terrainType: 2
+  - tile: {fileID: 11400000, guid: 338002e4a7eaf4d0a9726dde0b860440, type: 2}
+    terrainType: 2

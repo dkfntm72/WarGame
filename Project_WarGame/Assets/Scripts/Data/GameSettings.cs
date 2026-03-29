@@ -12,9 +12,9 @@ public class GameSettings : ScriptableObject
 
     [Header("Terrain Tiles")]
     public TileBase grassTile;
-    public TileBase wallTile;
+    public TileBase wallTile;        // 벽-풀 (하단이 풀/경사/등)
+    public TileBase wallOnWaterTile; // 벽-물 (하단이 물)
     public TileBase slopeTile;
-    public TileBase treeTile;
     public TileBase waterTile;
 
     [Header("Highlight Tiles")]
@@ -32,8 +32,11 @@ public class GameSettings : ScriptableObject
     {
         TerrainType.Wall  => wallTile,
         TerrainType.Slope => slopeTile,
-        TerrainType.Tree  => treeTile,
         TerrainType.Water => waterTile,
         _                 => grassTile
     };
+
+    // 아래 셀 지형을 고려한 Wall 타일 반환
+    public TileBase GetWallTile(TerrainType belowTerrain) =>
+        belowTerrain == TerrainType.Water ? (wallOnWaterTile != null ? wallOnWaterTile : wallTile) : wallTile;
 }

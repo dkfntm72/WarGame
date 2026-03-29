@@ -1,13 +1,13 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 
 public class AddEventSystem
 {
     public static void Execute()
     {
-        var existing = Object.FindFirstObjectByType<EventSystem>();
-        if (existing != null)
+        if (Object.FindFirstObjectByType<EventSystem>() != null)
         {
             Debug.Log("[WarGame] EventSystem already exists.");
             return;
@@ -15,11 +15,12 @@ public class AddEventSystem
 
         var go = new GameObject("EventSystem");
         go.AddComponent<EventSystem>();
-        go.AddComponent<StandaloneInputModule>();
+        go.AddComponent<InputSystemUIInputModule>();
 
+        Undo.RegisterCreatedObjectUndo(go, "Add EventSystem");
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene());
 
-        Debug.Log("[WarGame] EventSystem added.");
+        Debug.Log("[WarGame] EventSystem added to scene.");
     }
 }

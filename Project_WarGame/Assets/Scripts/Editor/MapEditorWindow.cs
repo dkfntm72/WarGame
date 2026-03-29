@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEditor;
+using UnityEngine.Tilemaps;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,6 +17,17 @@ public class MapEditorWindow : EditorWindow
     private Tool     currentTool  = Tool.Terrain;
     private Vector2  scrollPos;
     private float    cellSize     = 40f;
+
+    // Cached styles (avoid allocating new GUIStyle every frame)
+    private GUIStyle _buildingLabelStyle;
+    private GUIStyle _unitLabelStyle;
+    private GUIStyle _coordLabelStyle;
+    private GUIStyle BuildingLabelStyle => _buildingLabelStyle ??= new GUIStyle(EditorStyles.miniLabel)
+        { alignment = TextAnchor.MiddleCenter, fontSize = 8 };
+    private GUIStyle UnitLabelStyle => _unitLabelStyle ??= new GUIStyle(EditorStyles.miniLabel)
+        { alignment = TextAnchor.MiddleCenter, fontSize = 8 };
+    private GUIStyle CoordLabelStyle => _coordLabelStyle ??= new GUIStyle(EditorStyles.miniLabel)
+        { alignment = TextAnchor.LowerRight, fontSize = 7, normal = { textColor = new Color(0,0,0,0.4f) } };
 
     // Palette selections
     private TerrainType  selectedTerrain  = TerrainType.Grass;
@@ -64,6 +76,8 @@ public class MapEditorWindow : EditorWindow
 
         if (GUILayout.Button("New", EditorStyles.toolbarButton, GUILayout.Width(50))) CreateNew();
         if (GUILayout.Button("Save", EditorStyles.toolbarButton, GUILayout.Width(50))) SaveToAsset();
+        if (GUILayout.Button("From Tilemap", EditorStyles.toolbarButton, GUILayout.Width(90))) ImportFromTilemap();
+        if (GUILayout.Button("Apply to Scene", EditorStyles.toolbarButton, GUILayout.Width(100))) ApplyToScene();
 
         GUILayout.Space(10);
 
@@ -75,7 +89,7 @@ public class MapEditorWindow : EditorWindow
 
         if (mapData != null)
         {
-            GUILayout.Label($"Map: {mapData.scenarioName}  ({mapData.width}x{mapData.height})", EditorStyles.miniLabel);
+            EditorGUILayout.LabelField($"Map: {mapData.scenarioName}  ({mapData.width}x{mapData.height})", EditorStyles.miniLabel);
             GUILayout.Space(8);
 
             GUILayout.Label("W", GUILayout.Width(14));
@@ -238,9 +252,7 @@ public class MapEditorWindow : EditorWindow
         if (bp != null)
         {
             EditorGUI.DrawRect(Shrink(r, 6), FactionColor(bp.faction));
-            var labelStyle = new GUIStyle(EditorStyles.miniLabel)
-                { alignment = TextAnchor.MiddleCenter, fontSize = 8 };
-            EditorGUI.LabelField(r, BuildingChar(bp.buildingType), labelStyle);
+            EditorGUI.LabelField(r, BuildingChar(bp.buildingType), BuildingLabelStyle);
         }
 
         // Unit marker
@@ -249,17 +261,13 @@ public class MapEditorWindow : EditorWindow
         {
             var unitRect = Shrink(r, 10);
             EditorGUI.DrawRect(unitRect, FactionColor(up.faction));
-            var labelStyle = new GUIStyle(EditorStyles.miniLabel)
-                { alignment = TextAnchor.MiddleCenter, fontSize = 8 };
-            EditorGUI.LabelField(r, UnitChar(up.unitType), labelStyle);
+            EditorGUI.LabelField(r, UnitChar(up.unitType), UnitLabelStyle);
         }
 
         // Coordinates (small)
         if (cellSize >= 36)
         {
-            var coordStyle = new GUIStyle(EditorStyles.miniLabel)
-                { alignment = TextAnchor.LowerRight, fontSize = 7, normal = { textColor = new Color(0,0,0,0.4f) } };
-            EditorGUI.LabelField(r, $"{x},{y}", coordStyle);
+            EditorGUI.LabelField(r, $"{x},{y}", CoordLabelStyle);
         }
     }
 
@@ -336,6 +344,239 @@ public class MapEditorWindow : EditorWindow
         Debug.Log($"[MapEditor] '{mapData.scenarioName}' saved ({mapData.width}x{mapData.height})");
     }
 
+    private void ApplyToScene()
+    {
+        if (mapData == null) { EditorUtility.DisplayDialog("Apply", "MapData를 먼저 선택하세요.", "OK"); return; }
+
+        var guids = AssetDatabase.FindAssets("t:GameSettings");
+        if (guids.Length == 0) { EditorUtility.DisplayDialog("Apply", "GameSettings를 찾을 수 없습니다.", "OK"); return; }
+        var settings = AssetDatabase.LoadAssetAtPath<GameSettings>(AssetDatabase.GUIDToAssetPath(guids[0]));
+
+        var gm = Object.FindFirstObjectByType<GridManager>();
+        if (gm == null) { EditorUtility.DisplayDialog("Apply", "씬에 GridManager가 없습니다.", "OK"); return; }
+        var tilemap = gm.terrainTilemap;
+        if (tilemap == null) { EditorUtility.DisplayDialog("Apply", "GridManager에 terrainTilemap이 없습니다.", "OK"); return; }
+
+        // TerrainTileConfig 로드 (terrain type 별 — 같은 타입이 여러 개면 규칙 수가 많은 것을 사용)
+        var configs = new Dictionary<TerrainType, TerrainTileConfig>();
+        foreach (var guid in AssetDatabase.FindAssets("t:TerrainTileConfig"))
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var cfg  = AssetDatabase.LoadAssetAtPath<TerrainTileConfig>(path);
+            if (cfg == null) continue;
+
+            if (configs.TryGetValue(cfg.terrainType, out var existing))
+            {
+                if (cfg.rules.Count > existing.rules.Count)
+                {
+                    Debug.LogWarning($"[MapEditor] TerrainTileConfig 중복 — 규칙 수가 더 많은 '{path}' ({cfg.rules.Count}개)를 사용합니다 (기존 {existing.rules.Count}개 버림).");
+                    configs[cfg.terrainType] = cfg;
+                }
+                else
+                {
+                    Debug.LogWarning($"[MapEditor] TerrainTileConfig 중복 — '{path}' ({cfg.rules.Count}개)는 기존 것({existing.rules.Count}개)보다 규칙이 적으므로 무시합니다.");
+                }
+            }
+            else
+            {
+                configs[cfg.terrainType] = cfg;
+            }
+            Debug.Log($"[MapEditor] Config 로드: {cfg.terrainType} ({cfg.rules.Count}개 규칙) ← {path}");
+        }
+
+        Undo.RecordObject(tilemap, "Apply MapData to Scene");
+        tilemap.ClearAllTiles();
+
+        int ruleHit = 0, defaultHit = 0, fallbackHit = 0;
+
+        for (int y = 0; y < mapData.height; y++)
+        {
+            for (int x = 0; x < mapData.width; x++)
+            {
+                var terrain = mapData.GetTerrain(x, y);
+                TileBase tile;
+
+                if (configs.TryGetValue(terrain, out var cfg))
+                {
+                    var resolved = cfg.Resolve(GetNeighbors8(x, y));
+                    if (resolved != cfg.defaultTile) ruleHit++;
+                    else defaultHit++;
+                    tile = resolved;
+                }
+                else
+                {
+                    // 폴백: GameSettings 기본 타일
+                    tile = settings.GetTerrainTile(terrain);
+                    fallbackHit++;
+                }
+
+                tilemap.SetTile(new Vector3Int(x, y, 0), tile);
+            }
+        }
+
+        tilemap.RefreshAllTiles();
+
+        // ── Water Foam 레이어 적용 ────────────────────────────────
+        ApplyWaterFoamLayer(gm.grid, mapData);
+
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+
+        Debug.Log($"[MapEditor] 적용 완료 — 규칙 적중: {ruleHit}, 기본 타일: {defaultHit}, Config 없음(폴백): {fallbackHit}");
+    }
+
+    static void ApplyWaterFoamLayer(Grid grid, MapData mapData)
+    {
+        // WaterFoam 타일 에셋 로드/생성
+        const string foamAssetPath = "Assets/GameData/WaterFoam.asset";
+        var foamTile = AssetDatabase.LoadAssetAtPath<TileBase>(foamAssetPath);
+        if (foamTile == null)
+        {
+            var allAssets = AssetDatabase.LoadAllAssetsAtPath("Assets/Tiny Swords/Terrain/Tileset/Water Foam.png");
+            UnityEngine.Sprite foamSprite = null;
+            foreach (var obj in allAssets)
+                if (obj is UnityEngine.Sprite s && s.name == "Water Foam_0") { foamSprite = s; break; }
+
+            if (foamSprite == null) { Debug.LogWarning("[MapEditor] Water Foam_0 sprite not found — foam layer skipped"); return; }
+
+            var t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
+            t.sprite = foamSprite;
+            t.colliderType = UnityEngine.Tilemaps.Tile.ColliderType.None;
+            AssetDatabase.CreateAsset(t, foamAssetPath);
+            AssetDatabase.SaveAssets();
+            foamTile = t;
+        }
+
+        // WaterFoamTilemap 찾기/생성
+        UnityEngine.Tilemaps.Tilemap foamTilemap = null;
+        foreach (Transform child in grid.transform)
+        {
+            if (child.name == "WaterFoamTilemap")
+            {
+                foamTilemap = child.GetComponent<UnityEngine.Tilemaps.Tilemap>();
+                break;
+            }
+        }
+        if (foamTilemap == null)
+        {
+            var go = new GameObject("WaterFoamTilemap");
+            go.transform.SetParent(grid.transform, false);
+            foamTilemap = go.AddComponent<UnityEngine.Tilemaps.Tilemap>();
+            var renderer = go.AddComponent<UnityEngine.Tilemaps.TilemapRenderer>();
+            renderer.sortingOrder = -1;
+            Undo.RegisterCreatedObjectUndo(go, "Create WaterFoamTilemap");
+        }
+
+        foamTilemap.ClearAllTiles();
+
+        // 물과 인접한 잔디 타일에 foam 배치
+        int[] dx = { 1, -1, 0, 0 };
+        int[] dy = { 0,  0, 1,-1 };
+        for (int y = 0; y < mapData.height; y++)
+        {
+            for (int x = 0; x < mapData.width; x++)
+            {
+                if (mapData.GetTerrain(x, y) == TerrainType.Water) continue;
+
+                bool nextToWater = false;
+                for (int d = 0; d < 4; d++)
+                {
+                    int nx = x + dx[d], ny = y + dy[d];
+                    if (nx < 0 || nx >= mapData.width || ny < 0 || ny >= mapData.height) continue;
+                    if (mapData.GetTerrain(nx, ny) == TerrainType.Water) { nextToWater = true; break; }
+                }
+                if (nextToWater)
+                    foamTilemap.SetTile(new Vector3Int(x, y, 0), foamTile);
+            }
+        }
+
+        Debug.Log("[MapEditor] Water Foam 레이어 적용 완료");
+    }
+
+    // N, NE, E, SE, S, SW, W, NW 순서로 이웃 8칸의 TerrainType 반환
+    private TerrainType[] GetNeighbors8(int x, int y)
+    {
+        // dx, dy 쌍: N, NE, E, SE, S, SW, W, NW
+        (int dx, int dy)[] dirs = {
+            (0,1),(1,1),(1,0),(1,-1),(0,-1),(-1,-1),(-1,0),(-1,1)
+        };
+        var result = new TerrainType[8];
+        for (int i = 0; i < 8; i++)
+        {
+            int nx = x + dirs[i].dx;
+            int ny = y + dirs[i].dy;
+            result[i] = (nx >= 0 && nx < mapData.width && ny >= 0 && ny < mapData.height)
+                ? mapData.GetTerrain(nx, ny)
+                : TerrainType.Water; // 맵 밖은 Water로 간주
+        }
+        return result;
+    }
+
+    private void ImportFromTilemap()
+    {
+        if (mapData == null) { EditorUtility.DisplayDialog("Import", "MapData를 먼저 선택하세요.", "OK"); return; }
+
+        // GameSettings 찾기
+        var guids = AssetDatabase.FindAssets("t:GameSettings");
+        if (guids.Length == 0) { EditorUtility.DisplayDialog("Import", "GameSettings asset을 찾을 수 없습니다.", "OK"); return; }
+        var settings = AssetDatabase.LoadAssetAtPath<GameSettings>(AssetDatabase.GUIDToAssetPath(guids[0]));
+
+        // 씬의 GridManager → terrainTilemap
+        var gm = Object.FindFirstObjectByType<GridManager>();
+        if (gm == null) { EditorUtility.DisplayDialog("Import", "씬에 GridManager가 없습니다.", "OK"); return; }
+        var tilemap = gm.terrainTilemap;
+        if (tilemap == null) { EditorUtility.DisplayDialog("Import", "GridManager에 terrainTilemap이 연결되어 있지 않습니다.", "OK"); return; }
+
+        // TileBase → TerrainType 딕셔너리
+        var tileMap = new Dictionary<TileBase, TerrainType>();
+        void Register(TileBase t, TerrainType type) { if (t != null && !tileMap.ContainsKey(t)) tileMap[t] = type; }
+
+        // TileTerrainMapping 우선 적용 (있을 경우)
+        var mappingGuids = AssetDatabase.FindAssets("t:TileTerrainMapping");
+        if (mappingGuids.Length > 0)
+        {
+            var mapping = AssetDatabase.LoadAssetAtPath<TileTerrainMapping>(AssetDatabase.GUIDToAssetPath(mappingGuids[0]));
+            if (mapping.entries != null)
+                foreach (var e in mapping.entries)
+                    Register(e.tile, e.terrainType);
+        }
+
+        // GameSettings의 5개 기본 타일을 폴백으로 등록
+        Register(settings.grassTile,  TerrainType.Grass);
+        Register(settings.wallTile,   TerrainType.Wall);
+        Register(settings.slopeTile,  TerrainType.Slope);
+        Register(settings.waterTile,  TerrainType.Water);
+
+        Undo.RecordObject(mapData, "Import Terrain from Tilemap");
+        mapData.InitializeTerrain();
+
+        int matched = 0, unmatched = 0;
+        for (int y = 0; y < mapData.height; y++)
+        {
+            for (int x = 0; x < mapData.width; x++)
+            {
+                var tile = tilemap.GetTile(new Vector3Int(x, y, 0));
+                if (tile == null) { mapData.SetTerrain(x, y, TerrainType.Grass); continue; }
+
+                if (tileMap.TryGetValue(tile, out var terrainType))
+                {
+                    mapData.SetTerrain(x, y, terrainType);
+                    matched++;
+                }
+                else
+                {
+                    mapData.SetTerrain(x, y, TerrainType.Grass);
+                    unmatched++;
+                }
+            }
+        }
+
+        EditorUtility.SetDirty(mapData);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"[MapEditor] Tilemap → MapData 동기화 완료. 매칭: {matched}, 미인식(Grass 처리): {unmatched}");
+        EditorUtility.DisplayDialog("Import 완료", $"동기화 완료!\n매칭된 타일: {matched}\n미인식 타일(Grass 처리): {unmatched}", "OK");
+    }
+
     private void ResizeMap(int newW, int newH)
     {
         newW = Mathf.Clamp(newW, 4, 30);
@@ -363,7 +604,6 @@ public class MapEditorWindow : EditorWindow
         TerrainType.Grass => new Color(0.48f, 0.78f, 0.39f),
         TerrainType.Wall  => new Color(0.55f, 0.50f, 0.45f),
         TerrainType.Slope => new Color(0.72f, 0.65f, 0.48f),
-        TerrainType.Tree  => new Color(0.20f, 0.52f, 0.20f),
         TerrainType.Water => new Color(0.30f, 0.55f, 0.90f),
         _                 => Color.white
     };

@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1fc3c3516a0eb0844bd3fc5c4ba59902, type: 3}
+  m_Name: TerrainTileConfig
+  m_EditorClassIdentifier: 
+  terrainType: 0
+  defaultTile: {fileID: 11400000, guid: 3ea52188fe7254c5e93be5661febe3d0, type: 2}
+  rules: []
