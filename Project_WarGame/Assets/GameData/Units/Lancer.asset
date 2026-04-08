@@ -17,10 +17,13 @@ MonoBehaviour:
   maxHp: 80
   attack: 10
   defense: 3
-  moveRange: 3
+  moveRange: 5
   attackRange: 1
+  detectRange: 6
   goldCost: 40
   playerAnimController: {fileID: 9100000, guid: fa7ae5cd619544ca4a4ea82a50baa12d, type: 2}
   playerIdleSprite: {fileID: -5592250592134132327, guid: 2307ce0d618cb4ea2be2cb2a4148cbde, type: 3}
   enemyAnimController: {fileID: 9100000, guid: c0adc132f8afd46f6bb864d14269d701, type: 2}
   enemyIdleSprite: {fileID: -5592250592134132327, guid: fba04cf817a7246ec99f9c85cf9ef600, type: 3}
+  allyAnimController: {fileID: 9100000, guid: e604cfdc21df885210b72a4f2cd245c8, type: 2}
+  allyIdleSprite: {fileID: -594197781322936934, guid: 402bdd4018d3a420c98a285607e2b06d, type: 3}

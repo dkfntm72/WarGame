@@ -10,13 +10,26 @@ using System.Linq;
 public class MapEditorWindow : EditorWindow
 {
     // ── Tool modes ────────────────────────────────────────────
-    private enum Tool { Terrain, Building, Unit, Erase }
+    private enum Tool { Terrain, Building, Unit, Erase, Trigger }
 
     // ── State ─────────────────────────────────────────────────
     private MapData  mapData;
     private Tool     currentTool  = Tool.Terrain;
     private Vector2  scrollPos;
-    private float    cellSize     = 40f;
+    private float    _zoomFactor  = 1f;
+
+    // Cell size auto-fits to window; _zoomFactor scales up/down from that baseline
+    private float CellSize
+    {
+        get
+        {
+            if (mapData == null) return 40f;
+            const float kReservedH = 110f; // top bar + toolbar + palette area
+            float fitW = Mathf.Max(1, position.width  - 4)  / mapData.width;
+            float fitH = Mathf.Max(1, position.height - kReservedH) / mapData.height;
+            return Mathf.Clamp(Mathf.Min(fitW, fitH) * _zoomFactor, 12f, 100f);
+        }
+    }
 
     // Cached styles (avoid allocating new GUIStyle every frame)
     private GUIStyle _buildingLabelStyle;
@@ -34,10 +47,23 @@ public class MapEditorWindow : EditorWindow
     private BuildingType selectedBuilding = BuildingType.Castle;
     private UnitType     selectedUnit     = UnitType.Warrior;
     private Faction      selectedFaction  = Faction.Neutral;
+    private int          selectedRank        = 0;
+    private int          selectedDetectRange = 0; // 0 = UnitData 기본값
 
-    // Building/Unit lists for editing
+    // Building/Unit/Trigger lists for editing
     private List<BuildingPlacement> buildings = new();
     private List<UnitPlacement>     units     = new();
+    private List<EventTrigger>      triggers  = new();
+
+    // Trigger editing state
+    private EventTrigger _editingTrigger;
+    private bool         _placingTile;       // waiting for grid click to set range start
+    private bool         _placingTileEnd;    // waiting for grid click to set range end
+    private Vector2      _triggerScrollPos;
+
+    // Pending resize values (class fields so they persist across frames)
+    private int _resizeW;
+    private int _resizeH;
 
     // ── Menu item ─────────────────────────────────────────────
     [MenuItem("Window/WarGame/Map Editor")]
@@ -83,7 +109,7 @@ public class MapEditorWindow : EditorWindow
 
         // Zoom
         GUILayout.Label("Zoom", GUILayout.Width(40));
-        cellSize = EditorGUILayout.Slider(cellSize, 20f, 80f, GUILayout.Width(120));
+        _zoomFactor = EditorGUILayout.Slider(_zoomFactor, 0.5f, 3f, GUILayout.Width(120));
 
         GUILayout.FlexibleSpace();
 
@@ -93,11 +119,31 @@ public class MapEditorWindow : EditorWindow
             GUILayout.Space(8);
 
             GUILayout.Label("W", GUILayout.Width(14));
-            int newW = EditorGUILayout.IntField(mapData.width, GUILayout.Width(36));
+            _resizeW = EditorGUILayout.IntField(_resizeW, GUILayout.Width(36));
             GUILayout.Label("H", GUILayout.Width(14));
-            int newH = EditorGUILayout.IntField(mapData.height, GUILayout.Width(36));
+            _resizeH = EditorGUILayout.IntField(_resizeH, GUILayout.Width(36));
             if (GUILayout.Button("Resize", EditorStyles.toolbarButton, GUILayout.Width(55)))
-                ResizeMap(newW, newH);
+                ResizeMap(_resizeW, _resizeH);
+
+            GUILayout.Space(8);
+            GUILayout.Label("Camera", GUILayout.Width(50));
+            var newEdge = (CameraEdge)EditorGUILayout.EnumPopup(mapData.cameraStartEdge, GUILayout.Width(80));
+            if (newEdge != mapData.cameraStartEdge)
+            {
+                Undo.RecordObject(mapData, "Set Camera Start Edge");
+                mapData.cameraStartEdge = newEdge;
+                EditorUtility.SetDirty(mapData);
+            }
+
+            GUILayout.Space(8);
+            GUILayout.Label("Victory", GUILayout.Width(45));
+            var newVC = (VictoryCondition)EditorGUILayout.EnumPopup(mapData.victoryCondition, GUILayout.Width(120));
+            if (newVC != mapData.victoryCondition)
+            {
+                Undo.RecordObject(mapData, "Set Victory Condition");
+                mapData.victoryCondition = newVC;
+                EditorUtility.SetDirty(mapData);
+            }
         }
     }
 
@@ -109,6 +155,7 @@ public class MapEditorWindow : EditorWindow
         DrawToolButton(Tool.Building, "Place Building");
         DrawToolButton(Tool.Unit,     "Place Unit");
         DrawToolButton(Tool.Erase,    "Erase");
+        DrawToolButton(Tool.Trigger,  $"Triggers ({triggers.Count})");
     }
 
     private void DrawToolButton(Tool tool, string label)
@@ -137,6 +184,167 @@ public class MapEditorWindow : EditorWindow
             case Tool.Erase:
                 EditorGUILayout.LabelField("Click to erase buildings/units (terrain resets to Grass).");
                 break;
+            case Tool.Trigger:
+                DrawTriggerPalette();
+                break;
+        }
+    }
+
+    private void DrawTriggerPalette()
+    {
+        // ── Trigger list ──────────────────────────────────────
+        using (var row = new EditorGUILayout.HorizontalScope())
+        {
+            EditorGUILayout.LabelField("Event Triggers", EditorStyles.boldLabel, GUILayout.Width(120));
+            if (GUILayout.Button("+ Add Trigger", GUILayout.Width(100), GUILayout.Height(22)))
+            {
+                int newId = triggers.Count > 0 ? triggers[triggers.Count - 1].id + 1 : 1;
+                var t = new EventTrigger { id = newId, conditionType = EventConditionType.OnTileEnter, fireOnce = true };
+                triggers.Add(t);
+                _editingTrigger = t;
+                _placingTile    = false;
+                if (mapData != null) mapData.eventTriggers = triggers.ToArray();
+            }
+        }
+
+        _triggerScrollPos = EditorGUILayout.BeginScrollView(_triggerScrollPos, GUILayout.MaxHeight(80));
+        EventTrigger toDelete = null;
+        foreach (var tr in triggers)
+        {
+            var cond = tr.conditionType switch
+            {
+                EventConditionType.OnTileEnter      => $"TileEnter ({tr.x1},{tr.y1})-({tr.x2},{tr.y2})",
+                EventConditionType.OnTurnStart      => $"플레이어 턴 {tr.turnNumber} 시작",
+                EventConditionType.OnEnemyTurnStart => $"적 턴 {tr.turnNumber} 시작",
+                _                                   => tr.conditionType.ToString()
+            };
+            using var row = new EditorGUILayout.HorizontalScope();
+            bool isSelected = _editingTrigger == tr;
+            var style = isSelected ? EditorStyles.helpBox : EditorStyles.miniLabel;
+            if (GUILayout.Toggle(isSelected, $"#{tr.id}  {cond}  [{tr.actions.Length} actions]", style))
+                _editingTrigger = tr;
+            if (GUILayout.Button("X", EditorStyles.miniButton, GUILayout.Width(20)))
+                toDelete = tr;
+        }
+        EditorGUILayout.EndScrollView();
+
+        if (toDelete != null)
+        {
+            triggers.Remove(toDelete);
+            if (_editingTrigger == toDelete) _editingTrigger = null;
+            if (mapData != null) mapData.eventTriggers = triggers.ToArray();
+        }
+
+        // ── Editing panel ─────────────────────────────────────
+        if (_editingTrigger == null) return;
+
+        EditorGUILayout.Space(4);
+        EditorGUILayout.LabelField($"Editing Trigger #{_editingTrigger.id}", EditorStyles.boldLabel);
+
+        using (new EditorGUI.IndentLevelScope(1))
+        {
+            // Condition type
+            var newCond = (EventConditionType)EditorGUILayout.EnumPopup("Condition", _editingTrigger.conditionType);
+            if (newCond != _editingTrigger.conditionType)
+            {
+                _editingTrigger.conditionType = newCond;
+                _placingTile = false;
+                if (mapData != null) mapData.eventTriggers = triggers.ToArray();
+            }
+
+            if (_editingTrigger.conditionType == EventConditionType.OnTileEnter)
+            {
+                EditorGUILayout.LabelField($"Range  ({_editingTrigger.x1},{_editingTrigger.y1}) - ({_editingTrigger.x2},{_editingTrigger.y2})");
+                using var row = new EditorGUILayout.HorizontalScope();
+                var oldColor = GUI.color;
+
+                GUI.color = _placingTile ? Color.yellow : oldColor;
+                if (GUILayout.Button(_placingTile ? "▶ Click Start..." : "Set Start", EditorStyles.miniButton))
+                {
+                    _placingTile    = !_placingTile;
+                    _placingTileEnd = false;
+                }
+
+                GUI.color = _placingTileEnd ? Color.yellow : oldColor;
+                if (GUILayout.Button(_placingTileEnd ? "▶ Click End..." : "Set End", EditorStyles.miniButton))
+                {
+                    _placingTileEnd = !_placingTileEnd;
+                    _placingTile    = false;
+                }
+
+                GUI.color = oldColor;
+            }
+            else if (_editingTrigger.conditionType == EventConditionType.OnTurnStart ||
+                     _editingTrigger.conditionType == EventConditionType.OnEnemyTurnStart)
+            {
+                string label = _editingTrigger.conditionType == EventConditionType.OnTurnStart
+                    ? "플레이어 턴" : "적 턴";
+                var newTurn = EditorGUILayout.IntField($"{label} 번호", _editingTrigger.turnNumber);
+                if (newTurn != _editingTrigger.turnNumber)
+                {
+                    _editingTrigger.turnNumber = Mathf.Max(1, newTurn);
+                    if (mapData != null) mapData.eventTriggers = triggers.ToArray();
+                }
+                EditorGUILayout.HelpBox(
+                    $"{label} {_editingTrigger.turnNumber} 시작 시 발동합니다.",
+                    MessageType.None);
+            }
+
+            var newOnce = EditorGUILayout.Toggle("Fire Once", _editingTrigger.fireOnce);
+            if (newOnce != _editingTrigger.fireOnce)
+            {
+                _editingTrigger.fireOnce = newOnce;
+                if (mapData != null) mapData.eventTriggers = triggers.ToArray();
+            }
+
+            // Actions
+            EditorGUILayout.LabelField("Actions", EditorStyles.miniBoldLabel);
+            var actionList    = new List<TriggerAction>(_editingTrigger.actions);
+            TriggerAction actionToDelete = null;
+            bool          actionsChanged = false;
+
+            EditorGUI.BeginChangeCheck();
+            for (int i = 0; i < actionList.Count; i++)
+            {
+                var action = actionList[i];
+                using var row = new EditorGUILayout.HorizontalScope(EditorStyles.helpBox);
+
+                action.actionType = (TriggerActionType)EditorGUILayout.EnumPopup(action.actionType, GUILayout.Width(90));
+
+                if (action.actionType == TriggerActionType.ShowText)
+                {
+                    action.text = EditorGUILayout.TextField(action.text);
+                }
+                else // SpawnUnit
+                {
+                    action.unitType  = (UnitType)EditorGUILayout.EnumPopup(action.unitType, GUILayout.Width(70));
+                    action.faction   = (Faction)EditorGUILayout.EnumPopup(action.faction, GUILayout.Width(60));
+                    GUILayout.Label("X", GUILayout.Width(12));
+                    action.spawnX    = EditorGUILayout.IntField(action.spawnX, GUILayout.Width(28));
+                    GUILayout.Label("Y", GUILayout.Width(12));
+                    action.spawnY    = EditorGUILayout.IntField(action.spawnY, GUILayout.Width(28));
+                    GUILayout.Label("Rank", GUILayout.Width(32));
+                    action.spawnRank = EditorGUILayout.IntSlider(action.spawnRank, 0, 5, GUILayout.Width(90));
+                }
+
+                if (GUILayout.Button("X", EditorStyles.miniButton, GUILayout.Width(18)))
+                    actionToDelete = action;
+            }
+            actionsChanged |= EditorGUI.EndChangeCheck();
+
+            if (actionToDelete != null) { actionList.Remove(actionToDelete); actionsChanged = true; }
+
+            if (GUILayout.Button("+ Add Action", EditorStyles.miniButton, GUILayout.Width(90)))
+            {
+                actionList.Add(new TriggerAction { actionType = TriggerActionType.ShowText });
+                actionsChanged = true;
+            }
+
+            if (actionsChanged)
+            {
+                _editingTrigger.actions = actionList.ToArray();
+                if (mapData != null) mapData.eventTriggers = triggers.ToArray();
+            }
         }
     }
 
@@ -172,17 +380,42 @@ public class MapEditorWindow : EditorWindow
 
     private void DrawUnitPalette()
     {
-        using var row = new EditorGUILayout.HorizontalScope();
-        GUILayout.Label("Unit:", GUILayout.Width(60));
-        foreach (UnitType u in System.Enum.GetValues(typeof(UnitType)))
+        using (var row = new EditorGUILayout.HorizontalScope())
         {
-            bool sel = selectedUnit == u;
-            if (GUILayout.Toggle(sel, u.ToString(), EditorStyles.miniButton, GUILayout.Width(70), GUILayout.Height(24)) && !sel)
-                selectedUnit = u;
+            GUILayout.Label("Unit:", GUILayout.Width(60));
+            foreach (UnitType u in System.Enum.GetValues(typeof(UnitType)))
+            {
+                bool sel = selectedUnit == u;
+                if (GUILayout.Toggle(sel, u.ToString(), EditorStyles.miniButton, GUILayout.Width(70), GUILayout.Height(24)) && !sel)
+                    selectedUnit = u;
+            }
+            GUILayout.Space(12);
+            GUILayout.Label("Faction:", GUILayout.Width(55));
+            DrawFactionToggle(false); // units can't be Neutral
         }
-        GUILayout.Space(12);
-        GUILayout.Label("Faction:", GUILayout.Width(55));
-        DrawFactionToggle(false); // units can't be Neutral
+        using (var row = new EditorGUILayout.HorizontalScope())
+        {
+            GUILayout.Label("Rank:", GUILayout.Width(60));
+            for (int r = 0; r <= 5; r++)
+            {
+                string label = r == 0 ? "0 (신병)" : $"{r}★";
+                var old = GUI.backgroundColor;
+                GUI.backgroundColor = selectedRank == r ? new Color(1f, 0.85f, 0f) : old;
+                if (GUILayout.Toggle(selectedRank == r, label, EditorStyles.miniButton, GUILayout.Width(60), GUILayout.Height(22)))
+                    selectedRank = r;
+                GUI.backgroundColor = old;
+            }
+        }
+
+        // 감지범위: 적/동맹 유닛에만 표시
+        if (selectedFaction == Faction.Enemy || selectedFaction == Faction.Ally)
+        {
+            using var row = new EditorGUILayout.HorizontalScope();
+            GUILayout.Label("감지범위:", GUILayout.Width(60));
+            selectedDetectRange = EditorGUILayout.IntSlider(selectedDetectRange, 0, 20, GUILayout.Width(200));
+            string hint = selectedDetectRange == 0 ? " (UnitData 기본값)" : $" ({selectedDetectRange} 칸)";
+            EditorGUILayout.LabelField(hint, EditorStyles.miniLabel);
+        }
     }
 
     private void DrawFactionToggle(bool allowNeutral = true)
@@ -196,13 +429,16 @@ public class MapEditorWindow : EditorWindow
             selectedFaction = Faction.Player;
         if (GUILayout.Toggle(selectedFaction == Faction.Enemy, "Enemy", EditorStyles.miniButton, GUILayout.Width(55), GUILayout.Height(24)))
             selectedFaction = Faction.Enemy;
+        if (GUILayout.Toggle(selectedFaction == Faction.Ally, "Ally", EditorStyles.miniButton, GUILayout.Width(55), GUILayout.Height(24)))
+            selectedFaction = Faction.Ally;
     }
 
     // ── Grid display & input ──────────────────────────────────
     private void DrawGrid()
     {
-        float totalW = mapData.width  * cellSize;
-        float totalH = mapData.height * cellSize;
+        float cs     = CellSize;
+        float totalW = mapData.width  * cs;
+        float totalH = mapData.height * cs;
 
         var rect = GUILayoutUtility.GetRect(totalW + 2, totalH + 2,
             GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
@@ -212,9 +448,24 @@ public class MapEditorWindow : EditorWindow
         {
             for (int x = 0; x < mapData.width; x++)
             {
-                var cellRect = GetCellRect(rect, x, y);
+                var cellRect = GetCellRect(rect, x, y, cs);
                 DrawCell(cellRect, x, y);
             }
+        }
+
+        // Draw trigger range outlines on top of all cells
+        foreach (var tr in triggers)
+        {
+            if (tr.conditionType != EventConditionType.OnTileEnter) continue;
+            var r0 = GetCellRect(rect, tr.x1, tr.y1, cs);
+            var r1 = GetCellRect(rect, tr.x2, tr.y2, cs);
+            var rangeRect = Rect.MinMaxRect(
+                Mathf.Min(r0.xMin, r1.xMin), Mathf.Min(r0.yMin, r1.yMin),
+                Mathf.Max(r0.xMax, r1.xMax) + 1, Mathf.Max(r0.yMax, r1.yMax) + 1);
+            bool isSelected = tr == _editingTrigger;
+            Color borderColor = isSelected ? new Color(1f, 0.85f, 0f) : new Color(1f, 0.5f, 0f, 0.9f);
+            float t = isSelected ? 2f : 1.5f;
+            DrawRectBorder(rangeRect, borderColor, t);
         }
 
         // Handle mouse click
@@ -222,8 +473,8 @@ public class MapEditorWindow : EditorWindow
         if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0
             && rect.Contains(e.mousePosition))
         {
-            int cx = Mathf.FloorToInt((e.mousePosition.x - rect.x) / cellSize);
-            int cy = mapData.height - 1 - Mathf.FloorToInt((e.mousePosition.y - rect.y) / cellSize);
+            int cx = Mathf.FloorToInt((e.mousePosition.x - rect.x) / cs);
+            int cy = mapData.height - 1 - Mathf.FloorToInt((e.mousePosition.y - rect.y) / cs);
             if (cx >= 0 && cx < mapData.width && cy >= 0 && cy < mapData.height)
                 HandleCellClick(cx, cy);
             e.Use();
@@ -231,12 +482,12 @@ public class MapEditorWindow : EditorWindow
         }
     }
 
-    private Rect GetCellRect(Rect gridRect, int x, int y)
+    private Rect GetCellRect(Rect gridRect, int x, int y, float cs)
     {
         // y=0 draws at the bottom of the grid
-        float px = gridRect.x + x * cellSize;
-        float py = gridRect.y + (mapData.height - 1 - y) * cellSize;
-        return new Rect(px, py, cellSize - 1, cellSize - 1);
+        float px = gridRect.x + x * cs;
+        float py = gridRect.y + (mapData.height - 1 - y) * cs;
+        return new Rect(px, py, cs - 1, cs - 1);
     }
 
     private void DrawCell(Rect r, int x, int y)
@@ -261,11 +512,28 @@ public class MapEditorWindow : EditorWindow
         {
             var unitRect = Shrink(r, 10);
             EditorGUI.DrawRect(unitRect, FactionColor(up.faction));
-            EditorGUI.LabelField(r, UnitChar(up.unitType), UnitLabelStyle);
+            string unitLabel = up.rank > 0
+                ? $"{UnitChar(up.unitType)}\n{up.rank}★"
+                : UnitChar(up.unitType);
+            EditorGUI.LabelField(r, unitLabel, UnitLabelStyle);
+        }
+
+        // Trigger range fill (TileEnter type)
+        var triggerOnCell = triggers.Find(t =>
+            t.conditionType == EventConditionType.OnTileEnter && t.ContainsTile(x, y));
+        if (triggerOnCell != null)
+        {
+            bool isSelected = triggerOnCell == _editingTrigger;
+            EditorGUI.DrawRect(r, isSelected
+                ? new Color(1f, 0.7f, 0f, 0.55f)
+                : new Color(1f, 0.5f, 0f, 0.30f));
+            // ID 텍스트는 범위 시작 코너(x1,y1)에만 표시
+            if (x == triggerOnCell.x1 && y == triggerOnCell.y1)
+                EditorGUI.LabelField(r, $"T{triggerOnCell.id}", UnitLabelStyle);
         }
 
         // Coordinates (small)
-        if (cellSize >= 36)
+        if (CellSize >= 36)
         {
             EditorGUI.LabelField(r, $"{x},{y}", CoordLabelStyle);
         }
@@ -285,18 +553,61 @@ public class MapEditorWindow : EditorWindow
             case Tool.Building:
                 buildings.RemoveAll(b => b.x == x && b.y == y);
                 buildings.Add(new BuildingPlacement { x = x, y = y, buildingType = selectedBuilding, faction = selectedFaction });
+                mapData.buildings = buildings.ToArray();
                 break;
 
             case Tool.Unit:
                 var faction = selectedFaction == Faction.Neutral ? Faction.Player : selectedFaction;
                 units.RemoveAll(u => u.x == x && u.y == y);
-                units.Add(new UnitPlacement { x = x, y = y, unitType = selectedUnit, faction = faction });
+                units.Add(new UnitPlacement
+                {
+                    x = x, y = y,
+                    unitType = selectedUnit,
+                    faction  = faction,
+                    rank     = selectedRank,
+                    detectRange = (faction == Faction.Enemy || faction == Faction.Ally) ? selectedDetectRange : 0
+                });
+                mapData.units = units.ToArray();
                 break;
 
             case Tool.Erase:
                 mapData.SetTerrain(x, y, TerrainType.Grass);
                 buildings.RemoveAll(b => b.x == x && b.y == y);
                 units.RemoveAll(u => u.x == x && u.y == y);
+                triggers.RemoveAll(t => t.conditionType == EventConditionType.OnTileEnter && t.ContainsTile(x, y));
+                mapData.buildings     = buildings.ToArray();
+                mapData.units         = units.ToArray();
+                mapData.eventTriggers = triggers.ToArray();
+                break;
+
+            case Tool.Trigger:
+                if (_editingTrigger != null && _editingTrigger.conditionType == EventConditionType.OnTileEnter)
+                {
+                    if (_placingTile)
+                    {
+                        _editingTrigger.x1 = x; _editingTrigger.y1 = y;
+                        _editingTrigger.x2 = x; _editingTrigger.y2 = y;
+                        _placingTile = false;
+                        mapData.eventTriggers = triggers.ToArray();
+                        break;
+                    }
+                    if (_placingTileEnd)
+                    {
+                        _editingTrigger.x2 = Mathf.Max(_editingTrigger.x1, x);
+                        _editingTrigger.y2 = Mathf.Max(_editingTrigger.y1, y);
+                        _editingTrigger.x1 = Mathf.Min(_editingTrigger.x1, x);
+                        _editingTrigger.y1 = Mathf.Min(_editingTrigger.y1, y);
+                        _placingTileEnd = false;
+                        mapData.eventTriggers = triggers.ToArray();
+                        break;
+                    }
+                }
+                {
+                    // Click on existing trigger tile to select it
+                    var existing = triggers.Find(t =>
+                        t.conditionType == EventConditionType.OnTileEnter && t.ContainsTile(x, y));
+                    if (existing != null) _editingTrigger = existing;
+                }
                 break;
         }
     }
@@ -313,9 +624,13 @@ public class MapEditorWindow : EditorWindow
         AssetDatabase.CreateAsset(asset, path);
         AssetDatabase.SaveAssets();
 
-        mapData   = asset;
-        buildings = new List<BuildingPlacement>();
-        units     = new List<UnitPlacement>();
+        mapData          = asset;
+        buildings        = new List<BuildingPlacement>();
+        units            = new List<UnitPlacement>();
+        triggers         = new List<EventTrigger>();
+        _editingTrigger  = null;
+        _resizeW         = asset.width;
+        _resizeH         = asset.height;
     }
 
     private void LoadFromAsset()
@@ -328,8 +643,17 @@ public class MapEditorWindow : EditorWindow
             ? new List<UnitPlacement>(mapData.units)
             : new List<UnitPlacement>();
 
+        triggers = mapData.eventTriggers != null
+            ? new List<EventTrigger>(mapData.eventTriggers)
+            : new List<EventTrigger>();
+
+        _editingTrigger = null;
+
         if (mapData.terrain == null || mapData.terrain.Length != mapData.width * mapData.height)
             mapData.InitializeTerrain();
+
+        _resizeW = mapData.width;
+        _resizeH = mapData.height;
     }
 
     private void SaveToAsset()
@@ -337,8 +661,9 @@ public class MapEditorWindow : EditorWindow
         if (mapData == null) return;
 
         Undo.RecordObject(mapData, "Save Map");
-        mapData.buildings = buildings.ToArray();
-        mapData.units     = units.ToArray();
+        mapData.buildings     = buildings.ToArray();
+        mapData.units         = units.ToArray();
+        mapData.eventTriggers = triggers.ToArray();
         EditorUtility.SetDirty(mapData);
         AssetDatabase.SaveAssets();
         Debug.Log($"[MapEditor] '{mapData.scenarioName}' saved ({mapData.width}x{mapData.height})");
@@ -419,10 +744,184 @@ public class MapEditorWindow : EditorWindow
         // ── Water Foam 레이어 적용 ────────────────────────────────
         ApplyWaterFoamLayer(gm.grid, mapData);
 
+        // ── Wall 아래 Grass 레이어 적용 ──────────────────────────
+        ApplyWallGrassLayer(gm.grid, mapData, settings);
+
+        // ── Grass2 가장자리 아래 Grass 레이어 적용 ───────────────
+        ApplyGrass2BgLayer(gm.grid, mapData, settings);
+
+        // ── Slope 아래 Grass 레이어 적용 ─────────────────────────
+        ApplySlopeBgLayer(gm.grid, mapData, settings);
+
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene());
 
         Debug.Log($"[MapEditor] 적용 완료 — 규칙 적중: {ruleHit}, 기본 타일: {defaultHit}, Config 없음(폴백): {fallbackHit}");
+    }
+
+    static void ApplySlopeBgLayer(Grid grid, MapData mapData, GameSettings settings)
+    {
+        if (settings == null || settings.grassTile == null)
+        {
+            Debug.LogWarning("[MapEditor] grassTile을 GameSettings에서 찾을 수 없어 SlopeBgTilemap 생성을 건너뜁니다.");
+            return;
+        }
+
+        // SlopeBgTilemap 찾기/생성
+        UnityEngine.Tilemaps.Tilemap slopeBgTilemap = null;
+        foreach (Transform child in grid.transform)
+        {
+            if (child.name == "SlopeBgTilemap")
+            {
+                slopeBgTilemap = child.GetComponent<UnityEngine.Tilemaps.Tilemap>();
+                break;
+            }
+        }
+        if (slopeBgTilemap == null)
+        {
+            var go = new GameObject("SlopeBgTilemap");
+            go.transform.SetParent(grid.transform, false);
+            slopeBgTilemap = go.AddComponent<UnityEngine.Tilemaps.Tilemap>();
+            var renderer = go.AddComponent<UnityEngine.Tilemaps.TilemapRenderer>();
+            renderer.sortingOrder = -1;
+            Undo.RegisterCreatedObjectUndo(go, "Create SlopeBgTilemap");
+        }
+
+        slopeBgTilemap.ClearAllTiles();
+
+        int count = 0;
+        for (int y = 0; y < mapData.height; y++)
+        {
+            for (int x = 0; x < mapData.width; x++)
+            {
+                if (mapData.GetTerrain(x, y) == TerrainType.Slope)
+                {
+                    slopeBgTilemap.SetTile(new Vector3Int(x, y, 0), settings.grassTile);
+                    count++;
+                }
+            }
+        }
+
+        Debug.Log($"[MapEditor] SlopeBgTilemap 적용 완료 — {count}개 경사 위치에 풀 타일 배치");
+    }
+
+    static void ApplyWallGrassLayer(Grid grid, MapData mapData, GameSettings settings)
+    {
+        if (settings == null || settings.grassTile == null)
+        {
+            Debug.LogWarning("[MapEditor] grassTile을 GameSettings에서 찾을 수 없어 WallBgGrassTilemap 생성을 건너뜁니다.");
+            return;
+        }
+
+        // WallBgGrassTilemap 찾기/생성
+        UnityEngine.Tilemaps.Tilemap wallBgGrassTilemap = null;
+        foreach (Transform child in grid.transform)
+        {
+            if (child.name == "WallBgGrassTilemap")
+            {
+                wallBgGrassTilemap = child.GetComponent<UnityEngine.Tilemaps.Tilemap>();
+                break;
+            }
+        }
+        if (wallBgGrassTilemap == null)
+        {
+            var go = new GameObject("WallBgGrassTilemap");
+            go.transform.SetParent(grid.transform, false);
+            wallBgGrassTilemap = go.AddComponent<UnityEngine.Tilemaps.Tilemap>();
+            var renderer = go.AddComponent<UnityEngine.Tilemaps.TilemapRenderer>();
+            renderer.sortingOrder = -1;
+            Undo.RegisterCreatedObjectUndo(go, "Create WallBgGrassTilemap");
+        }
+
+        wallBgGrassTilemap.ClearAllTiles();
+
+        int count = 0;
+        for (int y = 0; y < mapData.height; y++)
+        {
+            for (int x = 0; x < mapData.width; x++)
+            {
+                if (mapData.GetTerrain(x, y) == TerrainType.Wall)
+                {
+                    wallBgGrassTilemap.SetTile(new Vector3Int(x, y, 0), settings.grassTile);
+                    count++;
+                }
+            }
+        }
+
+        Debug.Log($"[MapEditor] WallBgGrassTilemap 적용 완료 — {count}개 벽 위치에 풀 타일 배치");
+    }
+
+    static void ApplyGrass2BgLayer(Grid grid, MapData mapData, GameSettings settings)
+    {
+        if (settings == null || settings.grassTile == null)
+        {
+            Debug.LogWarning("[MapEditor] grassTile을 찾을 수 없어 Grass2BgTilemap 생성을 건너뜁니다.");
+            return;
+        }
+
+        // RuleTile 대신 순수 스프라이트 Tile 사용 — 배경층은 이웃 조건 없이 항상 동일한 스프라이트 표시
+        TileBase bgTile = null;
+        foreach (var guid in AssetDatabase.FindAssets("t:TerrainTileConfig"))
+        {
+            var cfg = AssetDatabase.LoadAssetAtPath<TerrainTileConfig>(AssetDatabase.GUIDToAssetPath(guid));
+            if (cfg != null && cfg.terrainType == TerrainType.Grass && cfg.defaultTile != null)
+            { bgTile = cfg.defaultTile; break; }
+        }
+        if (bgTile == null)
+        {
+            Debug.LogWarning("[MapEditor] TerrainTileConfig(Grass).defaultTile 없음 — grassTile(RuleTile) 폴백");
+            bgTile = settings.grassTile;
+        }
+
+        // Grass2BgTilemap 찾기/생성
+        UnityEngine.Tilemaps.Tilemap grass2BgTilemap = null;
+        foreach (Transform child in grid.transform)
+        {
+            if (child.name == "Grass2BgTilemap")
+            {
+                grass2BgTilemap = child.GetComponent<UnityEngine.Tilemaps.Tilemap>();
+                break;
+            }
+        }
+        if (grass2BgTilemap == null)
+        {
+            var go = new GameObject("Grass2BgTilemap");
+            go.transform.SetParent(grid.transform, false);
+            grass2BgTilemap = go.AddComponent<UnityEngine.Tilemaps.Tilemap>();
+            var renderer = go.AddComponent<UnityEngine.Tilemaps.TilemapRenderer>();
+            renderer.sortingOrder = -1;
+            Undo.RegisterCreatedObjectUndo(go, "Create Grass2BgTilemap");
+        }
+
+        grass2BgTilemap.ClearAllTiles();
+
+        int[] dx = { 1, -1, 0, 0 };
+        int[] dy = { 0,  0, 1, -1 };
+
+        int count = 0;
+        for (int y = 0; y < mapData.height; y++)
+        {
+            for (int x = 0; x < mapData.width; x++)
+            {
+                if (mapData.GetTerrain(x, y) != TerrainType.Grass2) continue;
+
+                bool nextToGrass = false;
+                for (int d = 0; d < 4; d++)
+                {
+                    int nx = x + dx[d], ny = y + dy[d];
+                    if (nx < 0 || nx >= mapData.width || ny < 0 || ny >= mapData.height) continue;
+                    if (mapData.GetTerrain(nx, ny) == TerrainType.Grass) { nextToGrass = true; break; }
+                }
+
+                if (nextToGrass)
+                {
+                    grass2BgTilemap.SetTile(new Vector3Int(x, y, 0), bgTile);
+                    count++;
+                }
+            }
+        }
+
+        Debug.Log($"[MapEditor] Grass2BgTilemap 적용 완료 — {count}개 위치에 {bgTile.name} 배치");
     }
 
     static void ApplyWaterFoamLayer(Grid grid, MapData mapData)
@@ -469,7 +968,31 @@ public class MapEditorWindow : EditorWindow
 
         foamTilemap.ClearAllTiles();
 
-        // 물과 인접한 잔디 타일에 foam 배치
+        // WaterBgEdgeTilemap 찾기/생성
+        UnityEngine.Tilemaps.Tilemap waterBgEdgeTilemap = null;
+        foreach (Transform child in grid.transform)
+        {
+            if (child.name == "WaterBgEdgeTilemap")
+            {
+                waterBgEdgeTilemap = child.GetComponent<UnityEngine.Tilemaps.Tilemap>();
+                break;
+            }
+        }
+        if (waterBgEdgeTilemap == null)
+        {
+            var go = new GameObject("WaterBgEdgeTilemap");
+            go.transform.SetParent(grid.transform, false);
+            waterBgEdgeTilemap = go.AddComponent<UnityEngine.Tilemaps.Tilemap>();
+            var renderer = go.AddComponent<UnityEngine.Tilemaps.TilemapRenderer>();
+            renderer.sortingOrder = -2;
+            Undo.RegisterCreatedObjectUndo(go, "Create WaterBgEdgeTilemap");
+        }
+        waterBgEdgeTilemap.ClearAllTiles();
+
+        var waterBgTile = AssetDatabase.LoadAssetAtPath<TileBase>(
+            "Assets/Tiny Swords/Terrain/Tileset/Tilemap Settings/Water Background color.asset");
+
+        // 물과 인접한 잔디 타일에 foam + waterBg 배치
         int[] dx = { 1, -1, 0, 0 };
         int[] dy = { 0,  0, 1,-1 };
         for (int y = 0; y < mapData.height; y++)
@@ -486,7 +1009,11 @@ public class MapEditorWindow : EditorWindow
                     if (mapData.GetTerrain(nx, ny) == TerrainType.Water) { nextToWater = true; break; }
                 }
                 if (nextToWater)
+                {
                     foamTilemap.SetTile(new Vector3Int(x, y, 0), foamTile);
+                    if (waterBgTile != null)
+                        waterBgEdgeTilemap.SetTile(new Vector3Int(x, y, 0), waterBgTile);
+                }
             }
         }
 
@@ -543,6 +1070,7 @@ public class MapEditorWindow : EditorWindow
 
         // GameSettings의 5개 기본 타일을 폴백으로 등록
         Register(settings.grassTile,  TerrainType.Grass);
+        Register(settings.grass2Tile, TerrainType.Grass2);
         Register(settings.wallTile,   TerrainType.Wall);
         Register(settings.slopeTile,  TerrainType.Slope);
         Register(settings.waterTile,  TerrainType.Water);
@@ -594,6 +1122,7 @@ public class MapEditorWindow : EditorWindow
 
         buildings.RemoveAll(b => b.x >= newW || b.y >= newH);
         units.RemoveAll(u => u.x >= newW || u.y >= newH);
+        triggers.RemoveAll(t => t.conditionType == EventConditionType.OnTileEnter && (t.x1 >= newW || t.y1 >= newH));
 
         EditorUtility.SetDirty(mapData);
     }
@@ -601,17 +1130,19 @@ public class MapEditorWindow : EditorWindow
     // ── Visuals ───────────────────────────────────────────────
     private static Color TerrainColor(TerrainType t) => t switch
     {
-        TerrainType.Grass => new Color(0.48f, 0.78f, 0.39f),
-        TerrainType.Wall  => new Color(0.55f, 0.50f, 0.45f),
-        TerrainType.Slope => new Color(0.72f, 0.65f, 0.48f),
-        TerrainType.Water => new Color(0.30f, 0.55f, 0.90f),
-        _                 => Color.white
+        TerrainType.Grass  => new Color(0.48f, 0.78f, 0.39f),
+        TerrainType.Wall   => new Color(0.55f, 0.50f, 0.45f),
+        TerrainType.Slope  => new Color(0.72f, 0.65f, 0.48f),
+        TerrainType.Water  => new Color(0.30f, 0.55f, 0.90f),
+        TerrainType.Grass2 => new Color(0.30f, 0.65f, 0.28f),
+        _                  => Color.white
     };
 
     private static Color FactionColor(Faction f) => f switch
     {
         Faction.Player  => new Color(0.2f, 0.4f, 0.9f, 0.85f),
         Faction.Enemy   => new Color(0.9f, 0.2f, 0.2f, 0.85f),
+        Faction.Ally    => new Color(0.2f, 0.8f, 0.4f, 0.85f),
         _               => new Color(0.7f, 0.7f, 0.7f, 0.85f)
     };
 
@@ -626,11 +1157,13 @@ public class MapEditorWindow : EditorWindow
 
     private static string UnitChar(UnitType u) => u switch
     {
-        UnitType.Warrior => "W",
-        UnitType.Archer  => "A",
-        UnitType.Lancer  => "L",
-        UnitType.Monk    => "M",
-        _                => "?"
+        UnitType.Warrior      => "W",
+        UnitType.Archer       => "A",
+        UnitType.Lancer       => "L",
+        UnitType.Monk         => "M",
+        UnitType.EliteWarrior => "EW",
+        UnitType.Tower        => "Tw",
+        _                     => "?"
     };
 
     private static Rect Shrink(Rect r, float amount) =>
@@ -645,5 +1178,13 @@ public class MapEditorWindow : EditorWindow
             new Vector3(r.xMax, r.yMax), new Vector3(r.xMin, r.yMax),
             new Vector3(r.xMin, r.yMin));
         Handles.color = old;
+    }
+
+    private static void DrawRectBorder(Rect r, Color c, float thickness = 1.5f)
+    {
+        EditorGUI.DrawRect(new Rect(r.xMin, r.yMin, r.width, thickness), c);           // top
+        EditorGUI.DrawRect(new Rect(r.xMin, r.yMax - thickness, r.width, thickness), c); // bottom
+        EditorGUI.DrawRect(new Rect(r.xMin, r.yMin, thickness, r.height), c);           // left
+        EditorGUI.DrawRect(new Rect(r.xMax - thickness, r.yMin, thickness, r.height), c); // right
     }
 }

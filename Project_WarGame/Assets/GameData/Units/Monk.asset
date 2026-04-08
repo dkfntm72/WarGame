@@ -24,3 +24,5 @@ MonoBehaviour:
   playerIdleSprite: {fileID: -7385789195546760866, guid: 7ba4178767e424c47b91888898a1fdc4, type: 3}
   enemyAnimController: {fileID: 9100000, guid: 89982da2b368f41848074f38ca2f2e0a, type: 2}
   enemyIdleSprite: {fileID: -7385789195546760866, guid: 088c72b8c44664ef7ba139bf42990072, type: 3}
+  allyAnimController: {fileID: 9100000, guid: 2d198010e6b927a1cf61edfbb93aa48b, type: 2}
+  allyIdleSprite: {fileID: 4723107735738678597, guid: d69e3be544b764174a6deb465428148d, type: 3}

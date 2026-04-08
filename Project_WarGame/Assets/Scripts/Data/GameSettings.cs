@@ -12,6 +12,7 @@ public class GameSettings : ScriptableObject
 
     [Header("Terrain Tiles")]
     public TileBase grassTile;
+    public TileBase grass2Tile;      // 2층 풀타일 (elevated grass)
     public TileBase wallTile;        // 벽-풀 (하단이 풀/경사/등)
     public TileBase wallOnWaterTile; // 벽-물 (하단이 물)
     public TileBase slopeTile;
@@ -25,15 +26,28 @@ public class GameSettings : ScriptableObject
     public GameObject unitPrefab;
     public GameObject buildingPrefab;
 
-    public UnitData GetUnitData(UnitType type)     => unitDataList[(int)type];
+    [Header("Effects")]
+    public GameObject deathEffectPrefab;
+
+    public UnitData GetUnitData(UnitType type)
+    {
+        int idx = (int)type;
+        if (unitDataList == null || idx >= unitDataList.Length)
+        {
+            Debug.LogError($"[GameSettings] UnitData 없음: {type} (index {idx}). unitDataList 크기={unitDataList?.Length ?? 0})");
+            return null;
+        }
+        return unitDataList[idx];
+    }
     public BuildingData GetBuildingData(BuildingType type) => buildingDataList[(int)type];
 
     public TileBase GetTerrainTile(TerrainType type) => type switch
     {
-        TerrainType.Wall  => wallTile,
-        TerrainType.Slope => slopeTile,
-        TerrainType.Water => waterTile,
-        _                 => grassTile
+        TerrainType.Wall   => wallTile,
+        TerrainType.Slope  => slopeTile,
+        TerrainType.Water  => waterTile,
+        TerrainType.Grass2 => grass2Tile != null ? grass2Tile : grassTile,
+        _                  => grassTile
     };
 
     // 아래 셀 지형을 고려한 Wall 타일 반환

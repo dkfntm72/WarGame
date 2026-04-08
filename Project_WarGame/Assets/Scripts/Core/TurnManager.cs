@@ -9,6 +9,7 @@ public class TurnManager : MonoBehaviour
     public GameState CurrentState { get; private set; }
 
     public event Action OnPlayerTurnStart;
+    public event Action OnAllyTurnStart;
     public event Action OnEnemyTurnStart;
     public event Action OnVictory;
     public event Action OnDefeat;
@@ -34,11 +35,37 @@ public class TurnManager : MonoBehaviour
 
         CollectGold();
         OnPlayerTurnStart?.Invoke();
+        EventTriggerManager.Instance?.OnTurnStart(TurnNumber);
     }
 
     public void EndPlayerTurn()
     {
         if (CurrentState != GameState.PlayerTurn) return;
+        // 동맹군이 있으면 동맹군 턴, 없으면 바로 적 턴
+        if (GameManager.Instance.AllyUnits.Count > 0)
+            StartAllyTurn();
+        else
+            StartEnemyTurn();
+    }
+
+    public void StartAllyTurn()
+    {
+        CurrentState = GameState.AllyTurn;
+
+        foreach (var unit in GameManager.Instance.AllyUnits)
+            unit.ResetTurn();
+
+        OnAllyTurnStart?.Invoke();
+
+        if (AllyAI.Instance != null)
+            AllyAI.Instance.StartCoroutine(AllyAI.Instance.ExecuteTurn());
+        else
+            EndAllyTurn();
+    }
+
+    public void EndAllyTurn()
+    {
+        if (CurrentState != GameState.AllyTurn) return;
         StartEnemyTurn();
     }
 
@@ -50,6 +77,7 @@ public class TurnManager : MonoBehaviour
             unit.ResetTurn();
 
         OnEnemyTurnStart?.Invoke();
+        EventTriggerManager.Instance?.OnEnemyTurnStart(TurnNumber);
 
         // Trigger AI
         if (EnemyAI.Instance != null)
@@ -80,12 +108,24 @@ public class TurnManager : MonoBehaviour
         bool playerHasUnits = GameManager.Instance.PlayerUnits.Count > 0;
         bool enemyHasUnits  = GameManager.Instance.EnemyUnits.Count > 0;
 
+        // 패배 조건: 아군 성 + 유닛 모두 소멸 (승리 조건과 무관하게 공통 적용)
         if (!playerHasCastle && !playerHasUnits)
         {
             CurrentState = GameState.Defeat;
             OnDefeat?.Invoke();
+            return;
         }
-        else if (!enemyHasCastle || !enemyHasUnits)
+
+        // 승리 조건: 맵 데이터에 따라 분기
+        var condition = GameManager.Instance.currentMap.victoryCondition;
+        bool victory = condition switch
+        {
+            VictoryCondition.AnnihilateEnemy    => !enemyHasUnits,
+            VictoryCondition.CaptureEnemyCastle => !enemyHasCastle,
+            _                                   => false
+        };
+
+        if (victory)
         {
             CurrentState = GameState.Victory;
             OnVictory?.Invoke();

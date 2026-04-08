@@ -31,7 +31,7 @@ public class TerrainTileConfig : ScriptableObject
 
 // ──────────────────────────────────────────────────────────────────────────
 // 이웃 한 칸의 조건
-// Any=-1, Grass/Wall/Slope/Water = TerrainType과 int 값 동일 (기존 에셋 호환)
+// Any=-1, Grass/Wall/Slope/Water/Grass2 = TerrainType과 int 값 동일 (기존 에셋 호환)
 // Same=-2 / NotSame=-3: 자신 지형 기준 상대 조건 (신규)
 // ──────────────────────────────────────────────────────────────────────────
 public enum NeighborReq
@@ -43,6 +43,7 @@ public enum NeighborReq
     Wall    =  1,
     Slope   =  2,
     Water   =  3,
+    Grass2  =  4,
 }
 
 // ──────────────────────────────────────────────────────────────────────────

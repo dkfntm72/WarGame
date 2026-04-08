@@ -1,0 +1,49 @@
+using UnityEngine;
+using UnityEngine.Tilemaps;
+using UnityEditor;
+
+public class RemoveWaterFoamOnWater
+{
+    public static void Execute()
+    {
+        var grid = GameObject.Find("Grid");
+        if (grid == null) { Debug.LogError("Grid not found"); return; }
+
+        Tilemap terrainTilemap = null;
+        Tilemap foamTilemap = null;
+        foreach (var tm in grid.GetComponentsInChildren<Tilemap>(true))
+        {
+            if (tm.name == "TerrainTilemap") terrainTilemap = tm;
+            if (tm.name == "WaterFoamTilemap") foamTilemap = tm;
+        }
+
+        if (terrainTilemap == null || foamTilemap == null)
+        {
+            Debug.LogError("Tilemap not found");
+            return;
+        }
+
+        var waterTile = AssetDatabase.LoadAssetAtPath<TileBase>(
+            "Assets/Tiny Swords/Terrain/Tileset/Tilemap Settings/Water Background color.asset");
+
+        if (waterTile == null) { Debug.LogError("Water Background color tile not found"); return; }
+
+        Undo.RecordObject(foamTilemap, "Remove WaterFoam from Water tiles");
+
+        int count = 0;
+        BoundsInt bounds = terrainTilemap.cellBounds;
+        for (int x = bounds.xMin; x < bounds.xMax; x++)
+        for (int y = bounds.yMin; y < bounds.yMax; y++)
+        {
+            var pos = new Vector3Int(x, y, 0);
+            if (terrainTilemap.GetTile(pos) == waterTile)
+            {
+                foamTilemap.SetTile(pos, null);
+                count++;
+            }
+        }
+
+        EditorUtility.SetDirty(foamTilemap);
+        Debug.Log($"[WaterFoam] Water 타일 위치 {count}개에서 WaterFoam 타일 제거 완료");
+    }
+}

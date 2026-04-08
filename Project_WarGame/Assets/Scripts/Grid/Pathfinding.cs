@@ -3,7 +3,8 @@ using System.Collections.Generic;
 public static class Pathfinding
 {
     // BFS path from start to end. Returns ordered list of nodes (not including start).
-    public static List<TileNode> FindPath(GridManager grid, TileNode start, TileNode end)
+    // faction: 이동하는 유닛의 진영. 적 진영 유닛이 있는 타일은 통과 불가.
+    public static List<TileNode> FindPath(GridManager grid, TileNode start, TileNode end, Faction faction = Faction.Neutral)
     {
         var parent  = new Dictionary<TileNode, TileNode>();
         var visited = new HashSet<TileNode> { start };
@@ -17,7 +18,12 @@ public static class Pathfinding
 
             foreach (var neighbor in GetNeighbors(grid, current))
             {
-                if (!visited.Contains(neighbor) && neighbor.IsWalkable)
+                // 적대 유닛이 점령한 타일은 통과 불가 (우호 유닛은 통과 가능, 목적지 자체는 허용)
+                bool blockedByEnemy = faction != Faction.Neutral
+                    && neighbor != end
+                    && neighbor.HasUnit
+                    && FactionHelper.IsHostileTo(faction, neighbor.OccupyingUnit.faction);
+                if (!visited.Contains(neighbor) && neighbor.IsWalkable && GridManager.CanTransition(current, neighbor) && !blockedByEnemy)
                 {
                     visited.Add(neighbor);
                     parent[neighbor] = current;

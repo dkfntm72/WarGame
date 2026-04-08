@@ -23,7 +23,11 @@ public class PlayerInputHandler : MonoBehaviour
     {
         if (TurnManager.Instance == null || TurnManager.Instance.CurrentState != GameState.PlayerTurn) return;
 
-        if (Input.GetMouseButtonDown(0))
+        // 드래그가 아닌 짧은 탭(릴리즈 시점)일 때만 타일 선택 처리
+        if (GameUI.Instance != null && GameUI.Instance.IsEventShowing)  return;
+        if (GameUI.Instance != null && GameUI.Instance.IsSettingsOpen)  return;
+
+        if (Input.GetMouseButtonUp(0) && !CameraDragController.IsDragging)
         {
             Vector3 world = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             world.z = 0;
@@ -92,7 +96,7 @@ public class PlayerInputHandler : MonoBehaviour
         // Tap move tile (empty) → move
         if (selectedUnit.CanMove && moveTiles.Contains(tile) && !tile.HasUnit)
         {
-            var path = Pathfinding.FindPath(GridManager.Instance, selectedUnit.CurrentTile, tile);
+            var path = Pathfinding.FindPath(GridManager.Instance, selectedUnit.CurrentTile, tile, Faction.Player);
             StartCoroutine(MoveAndFollowUp(selectedUnit, tile, path));
             return;
         }
@@ -120,6 +124,8 @@ public class PlayerInputHandler : MonoBehaviour
     {
         GridManager.Instance.ClearHighlights();
         yield return StartCoroutine(unit.MoveTo(dest, path));
+
+        EventTriggerManager.Instance?.OnUnitEnteredTile(unit, dest);
 
         // Capture buildings on landing
         if (dest.HasBuilding && dest.Building.faction != Faction.Player)
@@ -149,6 +155,8 @@ public class PlayerInputHandler : MonoBehaviour
     // 이동 가능 빈 칸(파란색) + 공격 가능 적/힐 대상 칸(빨간색) 동시 표시
     private void RefreshHighlights()
     {
+        if (selectedUnit == null) return;
+
         moveTiles.Clear();
         attackTiles.Clear();
 

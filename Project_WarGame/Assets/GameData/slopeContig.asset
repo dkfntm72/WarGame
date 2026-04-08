@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1fc3c3516a0eb0844bd3fc5c4ba59902, type: 3}
+  m_Name: slopeContig
+  m_EditorClassIdentifier: 
+  terrainType: 2
+  defaultTile: {fileID: 0}
+  rules:
+  - neighbors: 02000000ffffffff04000000ffffffffffffffffffffffffffffffffffffffff
+    tile: {fileID: 11400000, guid: 908b516dcb35840dcad08ee5f43f1f23, type: 2}
+  - neighbors: 02000000ffffffffffffffffffffffffffffffffffffffff04000000ffffffff
+    tile: {fileID: 11400000, guid: 0f850b2a19c4b424693a405f331daac6, type: 2}
+  - neighbors: ffffffffffffffff04000000ffffffffffffffffffffffffffffffffffffffff
+    tile: {fileID: 11400000, guid: 067c44a83049c4b58b7c81014b138e6b, type: 2}
+  - neighbors: ffffffffffffffffffffffffffffffffffffffffffffffff04000000ffffffff
+    tile: {fileID: 11400000, guid: 239ef29232ec34030ba78ec97687388e, type: 2}
+  - neighbors: ffffffffffffffffffffffffffffffffffffffff0100000004000000ffffffff
+    tile: {fileID: 11400000, guid: cdc06edefecd445c1b38ad37d22d49f9, type: 2}
+  - neighbors: ffffffffffffffff0400000001000000ffffffffffffffffffffffffffffffff
+    tile: {fileID: 11400000, guid: 067c44a83049c4b58b7c81014b138e6b, type: 2}
+  - neighbors: 02000000ffffffffffffffffffffffffffffffffffffffff01000000ffffffff
+    tile: {fileID: 11400000, guid: 0f850b2a19c4b424693a405f331daac6, type: 2}
+  - neighbors: 02000000ffffffff01000000ffffffffffffffffffffffffffffffffffffffff
+    tile: {fileID: 11400000, guid: 908b516dcb35840dcad08ee5f43f1f23, type: 2}

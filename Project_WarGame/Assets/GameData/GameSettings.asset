@@ -17,18 +17,21 @@ MonoBehaviour:
   - {fileID: 11400000, guid: aa316da549b7d3541b0d1ece3db02dbf, type: 2}
   - {fileID: 11400000, guid: 00db70b714163b244a975924415aaf4e, type: 2}
   - {fileID: 11400000, guid: f3a45ffcd4eb2b646913cf5367a09751, type: 2}
+  - {fileID: 11400000, guid: e7a2b4c5d6f1234598760abcdef01234, type: 2}
+  - {fileID: 11400000, guid: c3d4e5f6a7b8901234567890abcdef12, type: 2}
   buildingDataList:
   - {fileID: 11400000, guid: b3dbb70973b9a0244ac9211c71986d60, type: 2}
   - {fileID: 11400000, guid: 51ec52410abe628448e98740d6d3b44f, type: 2}
   - {fileID: 11400000, guid: 2708deadbcaa2ab4198ad00632a0722c, type: 2}
   - {fileID: 11400000, guid: f16cd0d38a393464ea1d350cf636aa1e, type: 2}
   grassTile: {fileID: 11400000, guid: eabfb4128edb252459b376b84e4fbb69, type: 2}
+  grass2Tile: {fileID: 0}
   wallTile: {fileID: 11400000, guid: 59d607d2caa1bb0419cb6681d4b3c292, type: 2}
   wallOnWaterTile: {fileID: 11400000, guid: dc2ef5cd169add545988bcd3917024ac, type: 2}
   slopeTile: {fileID: 11400000, guid: 8f3054a4926764fb58dbabffc35a76b8, type: 2}
-  treeTile: {fileID: 11400000, guid: 321f95fbeb8ae405a90113d0f2a1c35f, type: 2}
   waterTile: {fileID: 11400000, guid: ab40de2f0156a4e208fad1347f35016b, type: 2}
   moveHighlightTile: {fileID: 11400000, guid: b71b2e6ea03cb3e4d8d23c08aeedf3f5, type: 2}
   attackHighlightTile: {fileID: 11400000, guid: 4688a08bd79eac34a9ef9360825a3049, type: 2}
   unitPrefab: {fileID: 8754266005235608529, guid: e481a81fe3c1808419d5d940aff5d832, type: 3}
   buildingPrefab: {fileID: 2990371645484715215, guid: 3513ea0f48300274b908b474217cc596, type: 3}
+  deathEffectPrefab: {fileID: 2626442673102246573, guid: af072fa204afad84c83011f11dda9547, type: 3}

@@ -16,6 +16,6 @@ MonoBehaviour:
   buildingName: "\uC131"
   goldProduction: 10
   producibleUnits: 
-  neutralSprite: {fileID: 21300000, guid: ba6e4899ce2184481b037df5cb76ef31, type: 3}
+  neutralSprite: {fileID: 21300000, guid: d0349d8d3a04044f7a4810157b116b14, type: 3}
   playerSprite: {fileID: 21300000, guid: 5fef2d88b09824faba4be40a870c347e, type: 3}
   enemySprite: {fileID: 21300000, guid: ebc3f75c6f0fa49c38b57b0d8b13968e, type: 3}

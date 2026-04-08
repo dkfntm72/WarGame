@@ -30,15 +30,14 @@ public class GridManager : MonoBehaviour
         Height = mapData.height;
         nodes  = new TileNode[Width, Height];
 
-        terrainTilemap.ClearAllTiles();
-
+        // 타일맵 시각은 에디터에서 배치된 상태 그대로 유지.
+        // 런타임에 ClearAllTiles + RuleTile 재설정 시 엣지/코너 스프라이트가 뒤바뀌는 문제 방지.
         for (int y = 0; y < Height; y++)
         {
             for (int x = 0; x < Width; x++)
             {
                 var type = mapData.GetTerrain(x, y);
                 nodes[x, y] = new TileNode(x, y, type);
-                terrainTilemap.SetTile(new Vector3Int(x, y, 0), settings.GetTerrainTile(type));
             }
         }
     }
@@ -70,10 +69,10 @@ public class GridManager : MonoBehaviour
         {
             var (current, steps) = queue.Dequeue();
 
-            if (current != start && current.IsWalkable)
+            if (current != start && current.IsWalkable && current.TerrainType != TerrainType.Slope)
             {
-                // Can land unless occupied by same faction
-                if (!current.HasUnit || current.OccupyingUnit.faction != faction)
+                // 적대 유닛이 없으면 착지 가능 (입력 핸들러에서 !HasUnit 로 재필터링)
+                if (!current.HasUnit || !FactionHelper.IsHostileTo(faction, current.OccupyingUnit.faction))
                     result.Add(current);
             }
 
@@ -81,7 +80,9 @@ public class GridManager : MonoBehaviour
 
             foreach (var neighbor in GetNeighbors(current))
             {
-                if (!visited.ContainsKey(neighbor) && neighbor.IsWalkable)
+                // 적대 유닛이 점령한 타일은 통과 불가 (우호 유닛은 통과 가능)
+                bool blockedByEnemy = neighbor.HasUnit && FactionHelper.IsHostileTo(faction, neighbor.OccupyingUnit.faction);
+                if (!visited.ContainsKey(neighbor) && neighbor.IsWalkable && CanTransition(current, neighbor) && !blockedByEnemy)
                 {
                     visited[neighbor] = steps + 1;
                     queue.Enqueue((neighbor, steps + 1));
@@ -146,5 +147,28 @@ public class GridManager : MonoBehaviour
             if (n != null) result.Add(n);
         }
         return result;
+    }
+
+    // Grass2는 Slope 위칸(좌우 방향)을 통해서만 진입/이탈 가능
+    // 위칸 정의: 해당 Slope의 y+1이 Slope가 아닌 칸
+    public static bool CanTransition(TileNode from, TileNode to)
+    {
+        // Grass2 진입: Slope 위칸에서 좌우(같은 Y)로만 허용
+        if (to.TerrainType == TerrainType.Grass2 && from.TerrainType != TerrainType.Grass2)
+        {
+            if (from.TerrainType != TerrainType.Slope || to.Y != from.Y) return false;
+            var above = Instance?.GetTile(from.X, from.Y + 1);
+            if (above != null && above.TerrainType == TerrainType.Slope) return false;
+        }
+
+        // Grass2 이탈: Slope 위칸으로 좌우(같은 Y)로만 허용
+        if (from.TerrainType == TerrainType.Grass2 && to.TerrainType != TerrainType.Grass2)
+        {
+            if (to.TerrainType != TerrainType.Slope || to.Y != from.Y) return false;
+            var above = Instance?.GetTile(to.X, to.Y + 1);
+            if (above != null && above.TerrainType == TerrainType.Slope) return false;
+        }
+
+        return true;
     }
 }

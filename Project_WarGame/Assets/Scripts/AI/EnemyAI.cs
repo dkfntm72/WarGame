@@ -33,7 +33,7 @@ public class EnemyAI : MonoBehaviour
 
     private IEnumerator ActUnit(Unit unit)
     {
-        var target = FindNearestPlayerUnit(unit);
+        var target = FindNearestHostileUnit(unit);
         if (target == null) { unit.SetExhausted(); yield break; }
 
         // Attack immediately if already in range
@@ -56,7 +56,7 @@ public class EnemyAI : MonoBehaviour
 
             if (bestTile != null)
             {
-                var path = Pathfinding.FindPath(GridManager.Instance, unit.CurrentTile, bestTile);
+                var path = Pathfinding.FindPath(GridManager.Instance, unit.CurrentTile, bestTile, Faction.Enemy);
                 if (path.Count > 0)
                     yield return StartCoroutine(unit.MoveTo(bestTile, path));
 
@@ -69,7 +69,7 @@ public class EnemyAI : MonoBehaviour
         // Attack after moving if now in range
         if (unit.CanAct)
         {
-            var newTarget = FindNearestPlayerUnit(unit);
+            var newTarget = FindNearestHostileUnit(unit);
             if (newTarget != null && InAttackRange(unit, newTarget))
                 yield return StartCoroutine(PerformAttack(unit, newTarget));
             else
@@ -104,9 +104,11 @@ public class EnemyAI : MonoBehaviour
             GameManager.Instance.SpawnUnit(uData, Faction.Enemy, spawnTile);
     }
 
-    private Unit FindNearestPlayerUnit(Unit from) =>
+    // 적에게 적대적인 유닛(플레이어 + 동맹군) 중 가장 가까운 유닛
+    private Unit FindNearestHostileUnit(Unit from) =>
         GameManager.Instance.PlayerUnits
-            .Where(u => u.IsAlive)
+            .Concat(GameManager.Instance.AllyUnits)
+            .Where(u => u.IsAlive && ManhattanDist(from.CurrentTile, u.CurrentTile) <= from.DetectRange)
             .OrderBy(u => ManhattanDist(from.CurrentTile, u.CurrentTile))
             .FirstOrDefault();
 

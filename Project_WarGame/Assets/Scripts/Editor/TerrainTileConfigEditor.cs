@@ -37,6 +37,7 @@ public class TerrainTileConfigEditor : Editor
         NeighborReq.Wall    => new Color(0.52f, 0.48f, 0.42f),
         NeighborReq.Slope   => new Color(0.72f, 0.62f, 0.38f),
         NeighborReq.Water   => new Color(0.20f, 0.50f, 0.90f),
+        NeighborReq.Grass2  => new Color(0.18f, 0.55f, 0.18f),
         NeighborReq.Same    => new Color(0.20f, 0.80f, 0.60f),
         NeighborReq.NotSame => new Color(0.85f, 0.35f, 0.20f),
         _                   => new Color(0.35f, 0.35f, 0.35f),  // Any
@@ -48,6 +49,7 @@ public class TerrainTileConfigEditor : Editor
         NeighborReq.Wall    => "Wal",
         NeighborReq.Slope   => "Slp",
         NeighborReq.Water   => "Wat",
+        NeighborReq.Grass2  => "Gr2",
         NeighborReq.Same    => "==",
         NeighborReq.NotSame => "≠",
         _                   => "-",
@@ -57,7 +59,7 @@ public class TerrainTileConfigEditor : Editor
     static readonly NeighborReq[] Cycle =
     {
         NeighborReq.Any, NeighborReq.Same, NeighborReq.NotSame,
-        NeighborReq.Grass, NeighborReq.Wall, NeighborReq.Slope, NeighborReq.Water,
+        NeighborReq.Grass, NeighborReq.Wall, NeighborReq.Slope, NeighborReq.Water, NeighborReq.Grass2,
     };
     // NOTE: Same/NotSame 은 음수(-2/-3)이므로 Array.IndexOf 탐색이 올바르게 동작함
 

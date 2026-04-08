@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1fc3c3516a0eb0844bd3fc5c4ba59902, type: 3}
+  m_Name: Grass2config
+  m_EditorClassIdentifier: 
+  terrainType: 4
+  defaultTile: {fileID: 0}
+  rules:
+  - neighbors: 04000000ffffffff04000000ffffffff01000000ffffffff00000000ffffffff
+    tile: {fileID: 11400000, guid: a3abf3fd90b38485f8b990410e4dbaa6, type: 2}
+  - neighbors: 04000000ffffffff00000000ffffffff01000000ffffffff04000000ffffffff
+    tile: {fileID: 11400000, guid: be1dc873695254ec7a06ef587364e7a8, type: 2}
+  - neighbors: 00000000ffffffff04000000ffffffff04000000ffffffff00000000ffffffff
+    tile: {fileID: 11400000, guid: d1660b773e7c7462fb5788149ad65818, type: 2}
+  - neighbors: 00000000ffffffff00000000ffffffff04000000ffffffff04000000ffffffff
+    tile: {fileID: 11400000, guid: 338ea311011814576a48862c78082902, type: 2}
+  - neighbors: 00000000ffffffff04000000ffffffff04000000ffffffff04000000ffffffff
+    tile: {fileID: 11400000, guid: c157953b9e95f4d2fa541e39fd8c4c6d, type: 2}
+  - neighbors: 04000000ffffffff04000000ffffffff01000000ffffffff04000000ffffffff
+    tile: {fileID: 11400000, guid: bb3a149fe3cae45e08b8fd8c50647261, type: 2}
+  - neighbors: 04000000ffffffff00000000ffffffff04000000ffffffff04000000ffffffff
+    tile: {fileID: 11400000, guid: 5fa6bcbca23324b3caae6c98468bdb4c, type: 2}
+  - neighbors: 04000000ffffffff04000000ffffffff04000000ffffffff00000000ffffffff
+    tile: {fileID: 11400000, guid: 5e8c076672d404b90932a3f423531c6d, type: 2}
+  - neighbors: 04000000ffffffff04000000ffffffff04000000ffffffff04000000ffffffff
+    tile: {fileID: 11400000, guid: 1edfb4ce7584841cb841d5f7f878f6e4, type: 2}
+  - neighbors: 00000000ffffffffffffffffffffffffffffffffffffffff02000000ffffffff
+    tile: {fileID: 11400000, guid: c157953b9e95f4d2fa541e39fd8c4c6d, type: 2}
+  - neighbors: 00000000ffffffff02000000ffffffffffffffffffffffffffffffffffffffff
+    tile: {fileID: 11400000, guid: c157953b9e95f4d2fa541e39fd8c4c6d, type: 2}
+  - neighbors: ffffffffffffffff02000000ffffffff01000000ffffffffffffffffffffffff
+    tile: {fileID: 11400000, guid: be1dc873695254ec7a06ef587364e7a8, type: 2}
+  - neighbors: ffffffffffffffffffffffffffffffff01000000ffffffff02000000ffffffff
+    tile: {fileID: 11400000, guid: a3abf3fd90b38485f8b990410e4dbaa6, type: 2}
+  - neighbors: ffffffffffffffff0200000002000000ffffffffffffffffffffffffffffffff
+    tile: {fileID: 11400000, guid: 3ea52188fe7254c5e93be5661febe3d0, type: 2}
+  - neighbors: ffffffffffffffffffffffffffffffffffffffff0200000002000000ffffffff
+    tile: {fileID: 11400000, guid: 3ea52188fe7254c5e93be5661febe3d0, type: 2}
+  - neighbors: ffffffffffffffff02000000ffffffffffffffffffffffffffffffffffffffff
+    tile: {fileID: 11400000, guid: 5fa6bcbca23324b3caae6c98468bdb4c, type: 2}
+  - neighbors: ffffffffffffffffffffffffffffffffffffffffffffffff02000000ffffffff
+    tile: {fileID: 11400000, guid: 5e8c076672d404b90932a3f423531c6d, type: 2}

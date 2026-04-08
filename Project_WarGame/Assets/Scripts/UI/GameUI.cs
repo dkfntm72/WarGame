@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using TMPro;
+using System;
 
 public class GameUI : MonoBehaviour
 {
@@ -29,10 +31,41 @@ public class GameUI : MonoBehaviour
     public GameObject victoryPanel;
     public GameObject defeatPanel;
 
+    [Header("Settings")]
+    public Button     settingsToggleButton;
+    public GameObject settingsPanel;
+    public UnityEngine.UI.Slider volumeSlider;
+
+    [Header("Event Popup")]
+    public GameObject       eventPanel;
+    public TextMeshProUGUI  eventText;
+    public Button           eventConfirmButton;
+    public bool IsEventShowing  => eventPanel   != null && eventPanel.activeInHierarchy;
+    public bool IsSettingsOpen  => settingsPanel != null && settingsPanel.activeInHierarchy;
+
+    private Action _eventOnConfirm;
+    private bool   _isVictory;
+    private Unit   _displayedUnit;
+
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+    }
+
+    private void Update()
+    {
+        if (IsEventShowing && Input.GetMouseButtonUp(0))
+        {
+            eventPanel.SetActive(false);
+            var cb = _eventOnConfirm;
+            _eventOnConfirm = null;
+            cb?.Invoke();
+        }
+        else if (_isVictory && Input.GetMouseButtonUp(0))
+        {
+            SceneManager.LoadScene("StageSelect");
+        }
     }
 
     private void Start()
@@ -40,13 +73,46 @@ public class GameUI : MonoBehaviour
         endTurnButton.onClick.AddListener(() => PlayerInputHandler.Instance.OnEndTurnPressed());
 
         TurnManager.Instance.OnPlayerTurnStart += RefreshForPlayerTurn;
+        TurnManager.Instance.OnAllyTurnStart   += RefreshForAllyTurn;
         TurnManager.Instance.OnEnemyTurnStart  += RefreshForEnemyTurn;
-        TurnManager.Instance.OnVictory         += () => victoryPanel?.SetActive(true);
+        TurnManager.Instance.OnVictory         += OnVictoryHandler;
         TurnManager.Instance.OnDefeat          += () => defeatPanel?.SetActive(true);
         ResourceManager.Instance.OnGoldChanged += UpdateGold;
 
+        settingsPanel?.SetActive(false);
+        settingsToggleButton?.onClick.AddListener(ToggleSettings);
+
+        if (volumeSlider != null)
+        {
+            volumeSlider.value = AudioListener.volume;
+            volumeSlider.onValueChanged.AddListener(v => AudioListener.volume = v);
+        }
+
         HideUnitInfo();
         UpdateGold();
+    }
+
+    // ── Settings ──────────────────────────────────────────────
+    public void ToggleSettings()
+    {
+        if (settingsPanel == null) return;
+        settingsPanel.SetActive(!settingsPanel.activeInHierarchy);
+    }
+
+    public void ExitToStageSelect()
+    {
+        SceneManager.LoadScene("StageSelect");
+    }
+
+    // ── Victory handler ──────────────────────────────────────
+    private void OnVictoryHandler()
+    {
+        victoryPanel?.SetActive(true);
+        _isVictory = true;
+
+        string sceneName = SceneManager.GetActiveScene().name;
+        PlayerPrefs.SetInt("Cleared_" + sceneName, 1);
+        PlayerPrefs.Save();
     }
 
     // ── Turn display ──────────────────────────────────────────
@@ -55,6 +121,12 @@ public class GameUI : MonoBehaviour
         turnText.text               = $"Turn {TurnManager.Instance.TurnNumber} - Player";
         endTurnButton.interactable  = true;
         UpdateGold();
+    }
+
+    private void RefreshForAllyTurn()
+    {
+        turnText.text              = $"Turn {TurnManager.Instance.TurnNumber} - Ally";
+        endTurnButton.interactable = false;
     }
 
     private void RefreshForEnemyTurn()
@@ -67,13 +139,50 @@ public class GameUI : MonoBehaviour
         goldText.text = $"Gold: {ResourceManager.Instance.PlayerGold}";
 
     // ── Unit info ─────────────────────────────────────────────
+    private void PositionBottomLeft(GameObject panel)
+    {
+        var rt = panel.GetComponent<RectTransform>();
+        rt.anchorMin        = Vector2.zero;
+        rt.anchorMax        = Vector2.zero;
+        rt.pivot            = Vector2.zero;
+        rt.anchoredPosition = new Vector2(20f, 20f);
+    }
+
+    private void PositionBottomCenter(GameObject panel)
+    {
+        var rt = panel.GetComponent<RectTransform>();
+        rt.anchorMin        = new Vector2(0.5f, 0f);
+        rt.anchorMax        = new Vector2(0.5f, 0f);
+        rt.pivot            = new Vector2(0.5f, 0f);
+        rt.anchoredPosition = new Vector2(0f, 20f);
+    }
+
     public void ShowUnitInfo(Unit unit)
     {
+        if (_displayedUnit != null)
+            _displayedUnit.OnStateChanged -= RefreshUnitInfo;
+
+        _displayedUnit = unit;
+        _displayedUnit.OnStateChanged += RefreshUnitInfo;
+
         buildingPanel?.SetActive(false);
         unitInfoPanel.SetActive(true);
-        unitNameText.text  = unit.data.unitName;
-        unitHpText.text    = $"HP {unit.CurrentHp} / {unit.data.maxHp}";
-        unitStatsText.text = $"ATK {unit.data.attack}  DEF {unit.data.defense}  MOV {unit.data.moveRange}  RNG {unit.data.attackRange}";
+        PositionBottomLeft(unitInfoPanel);
+        RefreshUnitInfo();
+    }
+
+    private void RefreshUnitInfo()
+    {
+        if (_displayedUnit == null) return;
+        var unit = _displayedUnit;
+
+        Debug.Log($"[GameUI] {unit.data.unitName} Rank={unit.Rank} EffAtk={unit.EffectiveAttack} EffHp={unit.EffectiveMaxHp}");
+
+        unitNameText.text  = unit.Rank > 0
+            ? $"{unit.data.unitName}  {new string('★', unit.Rank)}"
+            : unit.data.unitName;
+        unitHpText.text    = $"HP {unit.CurrentHp} / {unit.EffectiveMaxHp}";
+        unitStatsText.text = $"ATK {unit.EffectiveAttack}  DEF {unit.data.defense}  MOV {unit.data.moveRange}  RNG {unit.data.attackRange}  [R:{unit.Rank}]";
 
         if (unitStatusText != null)
         {
@@ -102,8 +211,36 @@ public class GameUI : MonoBehaviour
 
     public void HideUnitInfo()
     {
+        if (_displayedUnit != null)
+        {
+            _displayedUnit.OnStateChanged -= RefreshUnitInfo;
+            _displayedUnit = null;
+        }
         unitInfoPanel?.SetActive(false);
         buildingPanel?.SetActive(false);
+    }
+
+    // ── Building panel ────────────────────────────────────────
+    // ── Event popup ───────────────────────────────────────────
+    public void ShowEventText(string text, Action onConfirm)
+    {
+        if (eventPanel == null)
+        {
+            Debug.LogWarning("[GameUI] eventPanel이 연결되지 않았습니다. Inspector에서 할당하세요.");
+            onConfirm?.Invoke();
+            return;
+        }
+
+        _eventOnConfirm = onConfirm;
+
+        eventPanel.SetActive(true);
+
+        if (eventText != null)
+            eventText.text = text;
+
+        // 확인 버튼은 사용하지 않음 — 화면 클릭으로 닫힘
+        if (eventConfirmButton != null)
+            eventConfirmButton.gameObject.SetActive(false);
     }
 
     // ── Building panel ────────────────────────────────────────
@@ -111,11 +248,23 @@ public class GameUI : MonoBehaviour
     {
         if (building.data.buildingType != BuildingType.Castle) return;
 
-        HideUnitInfo();
+        // 성 정보: unitInfoPanel 좌하단
+        unitInfoPanel.SetActive(true);
+        PositionBottomLeft(unitInfoPanel);
+        unitNameText.text  = building.data.buildingName;
+        unitHpText.text    = $"Gold/Turn: +{building.data.goldProduction}";
+        unitStatsText.text = $"Faction: {building.faction}";
+        if (unitStatusText != null) unitStatusText.text = "";
+
+        // 유닛 생성 패널: 화면 중앙 하단
         buildingPanel.SetActive(true);
+        PositionBottomCenter(buildingPanel);
+
+        var panelBg = buildingPanel.GetComponent<UnityEngine.UI.Image>();
+        if (panelBg != null) panelBg.enabled = false;
 
         var buildingTitleTmp = buildingPanel.GetComponentInChildren<TextMeshProUGUI>();
-        if (buildingTitleTmp != null) buildingTitleTmp.text = "Castle";
+        if (buildingTitleTmp != null) buildingTitleTmp.gameObject.SetActive(false);
 
         foreach (Transform child in unitButtonContainer)
             Destroy(child.gameObject);

@@ -16,6 +16,7 @@ public class GameManager : MonoBehaviour
 
     public List<Unit>     PlayerUnits { get; } = new();
     public List<Unit>     EnemyUnits  { get; } = new();
+    public List<Unit>     AllyUnits   { get; } = new();
     public List<Building> Buildings   { get; } = new();
 
     // Units unlocked for production at the castle
@@ -66,25 +67,35 @@ public class GameManager : MonoBehaviour
         {
             var tile = gridManager.GetTile(up.x, up.y);
             if (tile == null || tile.HasUnit) { Debug.LogWarning($"[GameManager] 유닛 타일 스킵: ({up.x},{up.y})"); continue; }
-            var unit = SpawnUnit(settings.GetUnitData(up.unitType), up.faction, tile);
+            var unit = SpawnUnit(settings.GetUnitData(up.unitType), up.faction, tile, up.rank, up.detectRange);
             Debug.Log($"[GameManager] 유닛 배치 완료: {unit?.data.unitName} [{up.faction}] ({up.x},{up.y})");
         }
 
         Debug.Log($"[GameManager] LoadMap 완료 - 플레이어:{PlayerUnits.Count} 적:{EnemyUnits.Count} 건물:{Buildings.Count}");
+
+        CameraDragController.Instance?.PositionAtMapEdge(currentMap.cameraStartEdge);
+
+        EventTriggerManager.Instance?.Initialize(currentMap);
+
         turnManager.StartGame();
     }
 
-    public Unit SpawnUnit(UnitData uData, Faction faction, TileNode tile)
+    public Unit SpawnUnit(UnitData uData, Faction faction, TileNode tile, int rank = 0, int detectRange = 0)
     {
         if (tile == null || tile.HasUnit) return null;
+        if (uData == null) { Debug.LogError($"[GameManager] SpawnUnit: uData가 null입니다. faction={faction} tile=({tile.X},{tile.Y})"); return null; }
 
         var go   = Instantiate(settings.unitPrefab);
+        if (go.GetComponent<RankBar>() == null) go.AddComponent<RankBar>();
         var unit = go.GetComponent<Unit>();
         unit.Initialize(uData, faction, tile);
+        if (rank > 0) unit.SetRank(Mathf.Clamp(rank, 0, 5));
+        if (detectRange > 0) unit.SetDetectRange(detectRange);
         unit.OnDied += HandleUnitDied;
 
-        if (faction == Faction.Player) PlayerUnits.Add(unit);
-        else if (faction == Faction.Enemy) EnemyUnits.Add(unit);
+        if (faction == Faction.Player)      PlayerUnits.Add(unit);
+        else if (faction == Faction.Enemy)  EnemyUnits.Add(unit);
+        else if (faction == Faction.Ally)   AllyUnits.Add(unit);
 
         return unit;
     }
@@ -107,6 +118,7 @@ public class GameManager : MonoBehaviour
     {
         PlayerUnits.Remove(unit);
         EnemyUnits.Remove(unit);
+        AllyUnits.Remove(unit);
         turnManager.CheckVictoryConditions();
     }
 

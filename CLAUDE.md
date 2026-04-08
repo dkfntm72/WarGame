@@ -61,3 +61,8 @@ Unity Test Framework is installed. Tests are run from the Unity Editor via **Win
 ## Git Workflow
 
 GitHub Actions workflows for Claude Code Review and Claude PR Assistant are configured (see `.github/workflows/`).
+
+## 행동 규칙
+
+- **스킬(Skill)은 사용자가 명시적으로 요청할 때만 실행한다.** 맥락으로 의도를 추측해서 자의적으로 스킬을 호출하지 않는다.
+- **UI 폰트는 항상 `Assets/Fonts/경기천년제목OTF_Bold SDF.asset`만 사용한다.** 새 TMP 텍스트 생성 시 이 폰트를 명시적으로 지정한다.
