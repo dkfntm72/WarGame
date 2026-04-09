@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -5,6 +6,9 @@ public class HealthBar : MonoBehaviour
 {
     private RectTransform fillRect;
     private Canvas        canvas;
+    private Coroutine     hideCoroutine;
+
+    private const float HideDelay = 2f;
 
     private void Awake()
     {
@@ -27,6 +31,28 @@ public class HealthBar : MonoBehaviour
         fillRect.anchorMax = new Vector2(ratio, 1f);
         fillRect.offsetMax = Vector2.zero;
 
-        canvas.gameObject.SetActive(current < max);
+        if (current < max)
+        {
+            canvas.gameObject.SetActive(true);
+            if (hideCoroutine != null) StopCoroutine(hideCoroutine);
+            hideCoroutine = StartCoroutine(HideAfterDelay());
+        }
+        else
+        {
+            if (hideCoroutine != null) { StopCoroutine(hideCoroutine); hideCoroutine = null; }
+            canvas.gameObject.SetActive(false);
+        }
+    }
+
+    public void SetSortingOrder(int order)
+    {
+        if (canvas != null) canvas.sortingOrder = order;
+    }
+
+    private IEnumerator HideAfterDelay()
+    {
+        yield return new WaitForSeconds(HideDelay);
+        if (canvas != null) canvas.gameObject.SetActive(false);
+        hideCoroutine = null;
     }
 }

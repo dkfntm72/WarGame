@@ -2,18 +2,19 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 유닛 위에 표시되는 등급 막대 UI (0~5단계).
+/// 유닛 오른쪽에 세로로 표시되는 등급 UI (0~5단계).
 /// Unit.Initialize() 호출 시 자동 생성되며, SetRank()로 갱신한다.
 /// </summary>
 public class RankBar : MonoBehaviour
 {
     private const int MaxRank = 5;
 
-    private static readonly Color ActiveColor   = new Color(1f, 0.82f, 0.1f);       // 금색
-    private static readonly Color InactiveColor = new Color(0.25f, 0.25f, 0.25f, 0.65f);
+    private static readonly Color ActiveColor   = new Color(1f, 0.82f, 0.1f);          // 금색
+    private static readonly Color InactiveColor = new Color(0.2f, 0.2f, 0.2f, 0.55f);  // 어두운 회색
 
-    private Image[]     _bars;
-    private GameObject  _root;
+    private Image[]    _bars;
+    private Canvas     _canvas;
+    private GameObject _root;
 
     private void Awake()
     {
@@ -23,20 +24,21 @@ public class RankBar : MonoBehaviour
         _root = new GameObject("RankBarRoot");
         _root.transform.SetParent(transform, false);
 
-        var canvas = _root.AddComponent<Canvas>();
-        canvas.renderMode  = RenderMode.WorldSpace;
-        canvas.sortingOrder = 6;   // HP바(5)보다 위
+        _canvas = _root.AddComponent<Canvas>();
+        _canvas.renderMode = RenderMode.WorldSpace;
 
         var rt = _root.GetComponent<RectTransform>();
-        rt.localPosition = new Vector3(0f, -0.55f, 0f);   // HP바 바로 아래
-        rt.localScale    = Vector3.one * 0.01f;
-        rt.sizeDelta     = new Vector2(96f, 12f);
+        // 유닛 오른쪽, 가로로 긴 바를 세로로 쌓은 형태
+        rt.localPosition = new Vector3(0.35f, 0.2f, 0f);
+        rt.localScale    = Vector3.one * 0.007f;
+        rt.sizeDelta     = new Vector2(32f, 64f);
 
-        // ── 막대 5개 생성 ────────────────────────────────────────
-        const float barW  = 14f;
-        const float barH  = 8f;
-        const float gap   = 2f;
-        float startX = -(MaxRank * barW + (MaxRank - 1) * gap) * 0.5f + barW * 0.5f;
+        // ── 가로로 긴 바 5개를 세로로 쌓기 (아래 = 1등급, 위 = 5등급) ──
+        const float barW  = 28f;
+        const float barH  = 9f;
+        const float gap   = 3f;
+        float totalH = MaxRank * barH + (MaxRank - 1) * gap;
+        float startY = -totalH * 0.5f + barH * 0.5f;
 
         for (int i = 0; i < MaxRank; i++)
         {
@@ -48,7 +50,7 @@ public class RankBar : MonoBehaviour
             _bars[i] = img;
 
             var brt = go.GetComponent<RectTransform>();
-            brt.anchoredPosition = new Vector2(startX + i * (barW + gap), 0f);
+            brt.anchoredPosition = new Vector2(0f, startY + i * (barH + gap));
             brt.sizeDelta        = new Vector2(barW, barH);
         }
 
@@ -61,5 +63,10 @@ public class RankBar : MonoBehaviour
         _root.SetActive(rank > 0);
         for (int i = 0; i < MaxRank; i++)
             _bars[i].color = i < rank ? ActiveColor : InactiveColor;
+    }
+
+    public void SetSortingOrder(int order)
+    {
+        if (_canvas != null) _canvas.sortingOrder = order;
     }
 }

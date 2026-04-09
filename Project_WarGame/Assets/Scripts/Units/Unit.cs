@@ -39,6 +39,7 @@ public class Unit : MonoBehaviour
     private HealthBar      healthBar;
     private RankBar        rankBar;
     private Animator       _overlayAnim; // 타워 위 궁수 오버레이
+    private SpriteRenderer _overlaySr;
 
     private static GameObject damageNumberPrefab;
 
@@ -67,10 +68,7 @@ public class Unit : MonoBehaviour
         if (data.unitType == UnitType.Tower)
         {
             transform.localScale = new Vector3(0.5f, 0.5f, 1f);
-
-            // 체력바는 부모 스케일 상속을 상쇄해 다른 유닛과 동일한 크기 유지
-            var hbRoot = transform.Find("HealthBarRoot");
-            if (hbRoot != null) hbRoot.localScale = new Vector3(2f, 2f, 1f);
+            // 체력바는 타워 스케일에 비례해 자연스럽게 작아지도록 별도 보정 없음
 
             // 타워 위 궁수 비주얼 오버레이 생성
             var archerData = GameManager.Instance?.settings?.GetUnitData(UnitType.Archer);
@@ -81,9 +79,8 @@ public class Unit : MonoBehaviour
                 overlayGO.transform.localPosition = new Vector3(0f, 0.6f, 0f);
                 overlayGO.transform.localScale    = Vector3.one;
 
-                var overlaySr = overlayGO.AddComponent<SpriteRenderer>();
-                overlaySr.sortingLayerName = sr != null ? sr.sortingLayerName : "Default";
-                overlaySr.sortingOrder     = sr != null ? sr.sortingOrder + 1 : 1;
+                _overlaySr = overlayGO.AddComponent<SpriteRenderer>();
+                _overlaySr.sortingLayerName = sr != null ? sr.sortingLayerName : "Default";
 
                 var archerController = archerData.GetAnimController(faction);
                 if (archerController != null)
@@ -93,7 +90,7 @@ public class Unit : MonoBehaviour
                 }
                 else
                 {
-                    overlaySr.sprite = archerData.GetIdleSprite(faction);
+                    _overlaySr.sprite = archerData.GetIdleSprite(faction);
                 }
             }
         }
@@ -249,6 +246,11 @@ public class Unit : MonoBehaviour
 
         Vector3 spawnPos = transform.position + Vector3.up * 0.5f;
         var go = Instantiate(damageNumberPrefab, spawnPos, Quaternion.identity);
+
+        // 유닛 sortingOrder보다 위에 렌더링되도록 보장
+        var mr = go.GetComponent<MeshRenderer>();
+        if (mr != null && sr != null) mr.sortingOrder = sr.sortingOrder + 3;
+
         go.GetComponent<DamageNumber>()?.Setup(amount, isHeal);
     }
 
@@ -299,6 +301,18 @@ public class Unit : MonoBehaviour
         }
         yield return new WaitForSeconds(0.85f);
         Destroy(gameObject);
+    }
+
+    private void LateUpdate()
+    {
+        if (sr == null) return;
+        // 타일맵(order 0)보다 항상 위, Y가 낮을수록(화면 아래) 앞에 렌더링
+        // 최대값을 100 수준으로 유지해 DamageNumber(order 10) 등과 충돌 방지
+        int order = 100 - Mathf.RoundToInt(transform.position.y);
+        sr.sortingOrder = order;
+        if (_overlaySr != null) _overlaySr.sortingOrder = order + 1;
+        healthBar?.SetSortingOrder(order + 2);
+        rankBar?.SetSortingOrder(order + 2);
     }
 
     private void RefreshColor()

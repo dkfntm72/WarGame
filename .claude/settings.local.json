@@ -37,7 +37,21 @@
       "mcp__coplay-mcp__install_unity_package",
       "mcp__coplay-mcp__open_scene",
       "mcp__coplay-mcp__scene_view_functions",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(find /d/WarGame/Project_WarGame/Assets/Scripts -type f -name \"*.cs\" -exec grep -l \"GridManager\\\\|MapData\" {} \\\\;)",
+      "mcp__coplay-mcp__add_component",
+      "mcp__coplay-mcp__parent_game_object",
+      "Bash(cp \"D:/UnityProject/Debug_shoting2/Assets/front/경기천년제목OTF_Bold SDF.asset\" \"D:/WarGame/Project_WarGame/Assets/Fonts/\")",
+      "Bash(cp \"D:/UnityProject/Debug_shoting2/Assets/front/경기천년제목OTF_Bold SDF.asset.meta\" \"D:/WarGame/Project_WarGame/Assets/Fonts/\")",
+      "Bash(cp \"D:/UnityProject/Debug_shoting2/Assets/front/경기천년제목OTF_Bold.otf\" \"D:/WarGame/Project_WarGame/Assets/Fonts/\")",
+      "Bash(cp \"D:/UnityProject/Debug_shoting2/Assets/front/경기천년제목OTF_Bold.otf.meta\" \"D:/WarGame/Project_WarGame/Assets/Fonts/\")",
+      "Bash(sed 's/^\"text\":\"//; s/\\\\\\\\n/\\\\n/g; s/\\\\\\\\t/\\\\t/g; s/\\\\\\\\\"/\"/g')",
+      "Read(//tmp/**)",
+      "Bash(grep:*)",
+      "Bash(awk '{print length}')",
+      "Bash(awk 'length==12352')",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
