@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 3b5af92575b87497ba7bfae8e982b2f2
+AssetOrigin:
+  serializedVersion: 1
+  productId: 352566
+  packageName: Tiny Swords
+  packageVersion: 1.0
+  assetPath: Assets/Tiny Swords/UI Elements/Bars/SmallBar_Base.png
+  uploadId: 844324
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -52,7 +59,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 0
   alignment: 0
@@ -102,6 +109,19 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
@@ -109,13 +129,13 @@ TextureImporter:
       name: SmallBar_Base_0
       rect:
         serializedVersion: 2
-        x: 48
-        y: 22
-        width: 17
-        height: 21
+        x: 52
+        y: 26
+        width: 88
+        height: 13
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 7, y: 5, z: 7, w: 5}
       customData: 
       outline: []
       physicsShape: []
@@ -123,50 +143,6 @@ TextureImporter:
       bones: []
       spriteID: 6dabf2eaa5d7751f0800000000000000
       internalID: -1056237759172199722
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: SmallBar_Base_1
-      rect:
-        serializedVersion: 2
-        x: 127
-        y: 22
-        width: 66
-        height: 21
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 42457b8d89854f3e0800000000000000
-      internalID: -2020892919288343516
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: SmallBar_Base_2
-      rect:
-        serializedVersion: 2
-        x: 191
-        y: 22
-        width: 1
-        height: 21
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: c9e7a17765cdd9880800000000000000
-      internalID: -8602477449284256100
       vertices: []
       indices: 
       edges: []
@@ -193,10 +169,3 @@ TextureImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 352566
-  packageName: Tiny Swords
-  packageVersion: 1.0
-  assetPath: Assets/Tiny Swords/UI Elements/Bars/SmallBar_Base.png
-  uploadId: 844324

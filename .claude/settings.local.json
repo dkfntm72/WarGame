@@ -51,7 +51,9 @@
       "Bash(awk '{print length}')",
       "Bash(awk 'length==12352')",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "mcp__coplay-mcp__set_transform",
+      "Bash(git:*)"
     ]
   }
 }

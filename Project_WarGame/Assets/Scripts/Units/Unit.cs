@@ -56,6 +56,11 @@ public class Unit : MonoBehaviour
         healthBar = GetComponent<HealthBar>();
         rankBar   = GetComponent<RankBar>();
 
+        // sortingOrder 고정 (타일맵 0·3보다 위, Z값으로 유닛 간 순서 결정)
+        if (sr != null) sr.sortingOrder = 5;
+        healthBar?.SetSortingOrder(10);
+        rankBar?.SetSortingOrder(10);
+
         var controller = data.GetAnimController(faction);
         if (anim != null && controller != null)
             anim.runtimeAnimatorController = controller;
@@ -68,7 +73,16 @@ public class Unit : MonoBehaviour
         if (data.unitType == UnitType.Tower)
         {
             transform.localScale = new Vector3(0.5f, 0.5f, 1f);
-            // 체력바는 타워 스케일에 비례해 자연스럽게 작아지도록 별도 보정 없음
+
+            // 부모 scale 0.5에 의해 HealthBarRoot 월드 크기가 절반으로 줄어드므로
+            // localScale을 2배로 보정하고, anchoredPosition.y를 타워 높이에 맞게 올림
+            var hbRoot = transform.Find("HealthBarRoot");
+            if (hbRoot != null)
+            {
+                hbRoot.localScale = new Vector3(0.02f, 0.02f, 1f);  // 0.01 / 0.5 = 월드 동일 크기
+                var rt = hbRoot.GetComponent<UnityEngine.RectTransform>();
+                if (rt != null) rt.anchoredPosition = new Vector2(0f, 0.7f); // 타워 스프라이트 위로
+            }
 
             // 타워 위 궁수 비주얼 오버레이 생성
             var archerData = GameManager.Instance?.settings?.GetUnitData(UnitType.Archer);
@@ -76,11 +90,12 @@ public class Unit : MonoBehaviour
             {
                 var overlayGO = new GameObject("ArcherOverlay");
                 overlayGO.transform.SetParent(transform);
-                overlayGO.transform.localPosition = new Vector3(0f, 0.6f, 0f);
+                overlayGO.transform.localPosition = new Vector3(0f, 0.6f, -0.01f); // 타워 본체보다 Z가 작아 카메라에 더 가까움 → 항상 앞에 렌더링
                 overlayGO.transform.localScale    = Vector3.one;
 
                 _overlaySr = overlayGO.AddComponent<SpriteRenderer>();
                 _overlaySr.sortingLayerName = sr != null ? sr.sortingLayerName : "Default";
+                _overlaySr.sortingOrder     = 5;
 
                 var archerController = archerData.GetAnimController(faction);
                 if (archerController != null)
@@ -247,9 +262,9 @@ public class Unit : MonoBehaviour
         Vector3 spawnPos = transform.position + Vector3.up * 0.5f;
         var go = Instantiate(damageNumberPrefab, spawnPos, Quaternion.identity);
 
-        // 유닛 sortingOrder보다 위에 렌더링되도록 보장
+        // 모든 유닛/UI보다 위에 렌더링
         var mr = go.GetComponent<MeshRenderer>();
-        if (mr != null && sr != null) mr.sortingOrder = sr.sortingOrder + 3;
+        if (mr != null) mr.sortingOrder = 15;
 
         go.GetComponent<DamageNumber>()?.Setup(amount, isHeal);
     }
@@ -305,14 +320,10 @@ public class Unit : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (sr == null) return;
-        // 타일맵(order 0)보다 항상 위, Y가 낮을수록(화면 아래) 앞에 렌더링
-        // 최대값을 100 수준으로 유지해 DamageNumber(order 10) 등과 충돌 방지
-        int order = 100 - Mathf.RoundToInt(transform.position.y);
-        sr.sortingOrder = order;
-        if (_overlaySr != null) _overlaySr.sortingOrder = order + 1;
-        healthBar?.SetSortingOrder(order + 2);
-        rankBar?.SetSortingOrder(order + 2);
+        // Y가 높을수록 Z가 커져 카메라(Z=-10)에서 멀어짐 → 뒤에 렌더링
+        // sortingOrder는 고정, Z값으로만 유닛 간 렌더 순서 결정
+        var p = transform.position;
+        transform.position = new Vector3(p.x, p.y, p.y * 0.01f);
     }
 
     private void RefreshColor()

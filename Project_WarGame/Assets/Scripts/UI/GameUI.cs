@@ -118,25 +118,25 @@ public class GameUI : MonoBehaviour
     // ── Turn display ──────────────────────────────────────────
     private void RefreshForPlayerTurn()
     {
-        turnText.text               = $"Turn {TurnManager.Instance.TurnNumber} - Player";
+        turnText.text               = $"{TurnManager.Instance.TurnNumber}턴 - 플레이어";
         endTurnButton.interactable  = true;
         UpdateGold();
     }
 
     private void RefreshForAllyTurn()
     {
-        turnText.text              = $"Turn {TurnManager.Instance.TurnNumber} - Ally";
+        turnText.text              = $"{TurnManager.Instance.TurnNumber}턴 - 동맹";
         endTurnButton.interactable = false;
     }
 
     private void RefreshForEnemyTurn()
     {
-        turnText.text              = $"Turn {TurnManager.Instance.TurnNumber} - Enemy";
+        turnText.text              = $"{TurnManager.Instance.TurnNumber}턴 - 적";
         endTurnButton.interactable = false;
     }
 
     private void UpdateGold() =>
-        goldText.text = $"Gold: {ResourceManager.Instance.PlayerGold}";
+        goldText.text = $"골드: {ResourceManager.Instance.PlayerGold}";
 
     // ── Unit info ─────────────────────────────────────────────
     private void PositionBottomLeft(GameObject panel)
@@ -151,10 +151,10 @@ public class GameUI : MonoBehaviour
     private void PositionBottomCenter(GameObject panel)
     {
         var rt = panel.GetComponent<RectTransform>();
-        rt.anchorMin        = new Vector2(0.5f, 0f);
-        rt.anchorMax        = new Vector2(0.5f, 0f);
-        rt.pivot            = new Vector2(0.5f, 0f);
-        rt.anchoredPosition = new Vector2(0f, 20f);
+        rt.anchorMin        = new Vector2(0.5f, 0.5f);
+        rt.anchorMax        = new Vector2(0.5f, 0.5f);
+        rt.pivot            = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = new Vector2(0f, -300f);
     }
 
     public void ShowUnitInfo(Unit unit)
@@ -182,28 +182,28 @@ public class GameUI : MonoBehaviour
             ? $"{unit.data.unitName}  {new string('★', unit.Rank)}"
             : unit.data.unitName;
         unitHpText.text    = $"HP {unit.CurrentHp} / {unit.EffectiveMaxHp}";
-        unitStatsText.text = $"ATK {unit.EffectiveAttack}  DEF {unit.data.defense}  MOV {unit.data.moveRange}  RNG {unit.data.attackRange}  [R:{unit.Rank}]";
+        unitStatsText.text = $"공격 {unit.EffectiveAttack}  방어 {unit.data.defense}  이동 {unit.data.moveRange}  사거리 {unit.data.attackRange}  [등급:{unit.Rank}]";
 
         if (unitStatusText != null)
         {
             if (unit.IsExhausted)
             {
-                unitStatusText.text  = "Exhausted";
+                unitStatusText.text  = "행동 불가";
                 unitStatusText.color = new UnityEngine.Color(0.8f, 0.4f, 0.4f, 1f);
             }
             else if (unit.HasMoved)
             {
-                unitStatusText.text  = "Moved / Can Act";
+                unitStatusText.text  = "이동 완료 / 행동 가능";
                 unitStatusText.color = new UnityEngine.Color(1f, 0.85f, 0.4f, 1f);
             }
             else if (!unit.CanAct)
             {
-                unitStatusText.text  = "Can Move / Cannot Act";
+                unitStatusText.text  = "이동 가능 / 행동 불가";
                 unitStatusText.color = new UnityEngine.Color(1f, 0.85f, 0.4f, 1f);
             }
             else
             {
-                unitStatusText.text  = "Ready";
+                unitStatusText.text  = "대기 중";
                 unitStatusText.color = new UnityEngine.Color(0.6f, 1f, 0.6f, 1f);
             }
         }
@@ -252,8 +252,8 @@ public class GameUI : MonoBehaviour
         unitInfoPanel.SetActive(true);
         PositionBottomLeft(unitInfoPanel);
         unitNameText.text  = building.data.buildingName;
-        unitHpText.text    = $"Gold/Turn: +{building.data.goldProduction}";
-        unitStatsText.text = $"Faction: {building.faction}";
+        unitHpText.text    = $"골드/턴: +{building.data.goldProduction}";
+        unitStatsText.text = $"진영: {building.faction}";
         if (unitStatusText != null) unitStatusText.text = "";
 
         // 유닛 생성 패널: 화면 중앙 하단
@@ -291,7 +291,7 @@ public class GameUI : MonoBehaviour
             if (nameTmp != null)
             {
                 nameTmp.text  = uData.unitName;
-                nameTmp.color = unlocked ? Color.white : new Color(0.45f, 0.45f, 0.45f, 1f);
+                nameTmp.color = unlocked ? Color.black : new Color(0.35f, 0.35f, 0.35f, 1f);
             }
 
             // Cost
@@ -299,9 +299,9 @@ public class GameUI : MonoBehaviour
             if (costTmp != null)
             {
                 costTmp.text  = $"{uData.goldCost}G";
-                costTmp.color = !unlocked       ? new Color(0.45f, 0.45f, 0.45f, 1f)
-                              : canAfford        ? new Color(1f, 0.85f, 0.3f, 1f)
-                              :                   new Color(0.9f, 0.3f, 0.3f, 1f);
+                costTmp.color = !unlocked  ? new Color(0.35f, 0.35f, 0.35f, 1f)
+                              : canAfford  ? new Color(0.6f, 0.45f, 0.05f, 1f)
+                              :              new Color(0.6f, 0.15f, 0.05f, 1f);
             }
 
             var button = btn.GetComponent<Button>();

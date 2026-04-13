@@ -1,32 +1,129 @@
-# WarGame Handoff — 2026-04-09
+# WarGame Handoff — 2026-04-11
 
 ## 이번 세션 작업 내용
 
-### 1. HealthBar 자동 숨김 (`HealthBar.cs`)
-- 데미지를 받으면 체력바가 나타나고 **2초 후 자동으로 사라지는** 코루틴 추가
-- 그 사이 추가 데미지를 받으면 타이머 리셋
-- `SetSortingOrder(int order)` 메서드 추가 → Unit LateUpdate에서 동기화
+### 1. Stage01 Canvas UI 신규 생성
 
-### 2. Tower 체력바 크기 수정 (`Unit.cs`)
-- 기존: Tower 스케일 0.5x를 상쇄하려 `hbRoot.localScale = (2, 2, 1)` 적용 → 과도하게 크게 보임
-- 수정: 보정 코드 제거. Tower 스케일에 비례해 자연스럽게 0.5x로 표시
+**배경:**
+- `Assets/Stage01.unity`에 Canvas 오브젝트가 전혀 없어 `GameUI.Instance == null` 상태였음
+- EventTrigger ShowText 호출 시 NullReferenceException 크래시 발생
+- `WarGameSceneSetup.cs`가 `Assets/Scenes/Stage01.unity`에만 씬을 생성해 현재 씬에는 적용된 적 없음
 
-### 3. Y-소팅 (스프라이트 겹침 해결) (`Unit.cs`)
-- `LateUpdate()`에서 `sortingOrder = 100 - (int)position.y` 로 매 프레임 갱신
-- Y가 낮을수록(화면 아래) 앞에 렌더링 → 유닛끼리 자연스럽게 겹침
-- Tower의 ArcherOverlay (`_overlaySr`)도 `order + 1`로 동기화
-- HealthBar Canvas → `order + 2`, RankBar Canvas → `order + 2`로 항상 유닛 위에 표시
+**해결:**
+- `Assets/Scripts/Editor/BuildGameUI.cs` 에디터 스크립트 신규 작성
+- 스크립트 실행으로 Canvas UI 전체 생성 + GameUI 필드 연결
 
-### 4. DamageNumber 렌더링 버그 수정 (`Unit.cs`)
-- **원인**: Y-소팅으로 유닛 sortingOrder가 대폭 상승(10000+)하면서 DamageNumber(order 10)가 유닛 뒤에 숨음
-- **수정**: sortingOrder 기준값을 `100`으로 낮추고, DamageNumber 생성 시 `sr.sortingOrder + 3`으로 설정
+**생성된 UI 구성:**
 
-### 5. RankBar 레이아웃 변경 (`RankBar.cs`)
-- 기존: 가로 막대 5개를 유닛 하단에 가로 배치
-- 변경: **가로로 긴 직사각형 바(28x9) 5개를 유닛 오른쪽에 세로로 쌓기**
-- 위치: `localPosition = (0.35f, 0.2f, 0f)`
-- 크기: `localScale = 0.007f` (기본 0.01의 0.7배)
-- sortingOrder: LateUpdate에서 유닛과 동기화 (`SetSortingOrder` 메서드)
+| 오브젝트 | 설명 |
+|---|---|
+| `UI` (Canvas) | ScreenSpaceOverlay, sortingOrder=10, ScaleWithScreenSize 1080×1920 |
+| `UI/HUD` | 상단바 — SpecialPaper_0 Sliced 배경 (금장 테두리), 높이 120 |
+| `UI/HUD/TurnText` | 좌측, 폰트 36px |
+| `UI/HUD/GoldText` | 중앙, 폰트 36px |
+| `UI/HUD/SettingsButton` | 우측, Icon_10 톱니바퀴 아이콘 (텍스트 없음), 80×80 |
+| `UI/EndTurnButton` | 우하단, SmallBlueSquareButton_Regular_0 Sliced, 160×160 |
+| `UI/UnitInfoPanel` | 좌하단, 320×170, 유닛 선택 시 표시 |
+| `UI/BuildingPanel` | 중앙 y=-300, 770×280, 성 클릭 시 표시 |
+| `UI/VictoryPanel` | 중앙, 600×320, 승리 시 표시 |
+| `UI/DefeatPanel` | 중앙, 600×320, 패배 시 표시 |
+| `UI/SettingsPanel` | 중앙, 500×300, 볼륨 슬라이더 + 나가기 버튼 |
+| `UI/EventPanel` | 전체화면 반투명 오버레이, 이벤트 팝업 |
+
+---
+
+### 2. GameUI.cs 수정
+
+- `PositionBottomCenter()` — 앵커 중앙 기준 y=-300으로 변경 (런타임 위치 덮어쓰기 방지)
+
+---
+
+### 3. 사용된 스프라이트
+
+| 스프라이트 | 용도 |
+|---|---|
+| `Tiny Swords/UI Elements/Papers/SpecialPaper.png` → `SpecialPaper_0` | HUD 상단바 배경 |
+| `Tiny Swords/UI Elements/Buttons/SmallBlueSquareButton_Regular.png` → `SmallBlueSquareButton_Regular_0` | End Turn 버튼 |
+| `Tiny Swords/UI Elements/Icons/Icon_10.png` | 설정 버튼 아이콘 |
+
+---
+
+## 미해결 이슈
+
+| 이슈 | 원인 | 권장 해결책 |
+|---|---|---|
+| 음량 슬라이더 PlayerPrefs 저장 | 미구현 | PlayerPrefs 연동 |
+
+---
+
+---
+
+## 이번 세션 작업 내용 (2026-04-12) — 2차
+
+### 1. UI 전체 한글화 (`GameUI.cs`)
+
+| 영어 | 한글 |
+|---|---|
+| `Turn X - Player/Ally/Enemy` | `X턴 - 플레이어/동맹/적` |
+| `Gold: N` | `골드: N` |
+| `ATK/DEF/MOV/RNG/[R:]` | `공격/방어/이동/사거리/[등급:]` |
+| `Exhausted` | `행동 불가` |
+| `Moved / Can Act` | `이동 완료 / 행동 가능` |
+| `Can Move / Cannot Act` | `이동 가능 / 행동 불가` |
+| `Ready` | `대기 중` |
+| `Gold/Turn:` | `골드/턴:` |
+| `Faction:` | `진영:` |
+
+`BuildGameUI.cs` 초기값도 동일하게 한글화 (턴 종료, 유닛 훈련, 승리!, 패배..., 설정, 음량, 스테이지 선택)
+
+---
+
+### 2. UI 패널 스프라이트 변경 (`BuildGameUI.cs`)
+
+- **UnitInfoPanel** → `RegularPaper_0` (Sliced), 텍스트 검은색, 크기 320×170
+- **BuildingPanel / VictoryPanel / DefeatPanel / SettingsPanel** → `SpecialPaper_0` (Sliced)
+- `SetImgSliced()` 헬퍼 메서드 추가
+
+---
+
+### 3. UnitButton 프리팹 개선
+
+- 배경 스프라이트 → `RegularPaper_0` (Sliced) (`SetUnitButtonSprite.cs`)
+- 폰트 → `경기천년제목OTF_Bold SDF` (`FixUnitButton.cs`)
+- 아웃라인 머티리얼 적용 → `경기천년제목OTF_Bold SDF - Outline.mat`
+- UnitName 텍스트 색상 → 검은색 (잠금 시 어두운 회색)
+- UnitCost 텍스트 색상 → 어두운 노란색 (골드 부족 시 어두운 적색)
+
+---
+
+### 4. TMP 아웃라인 머티리얼 생성
+
+- 경로: `Assets/Fonts/경기천년제목OTF_Bold SDF - Outline.mat`
+- OutlineColor: 검은색, OutlineWidth: 0.3
+- Canvas 내 모든 TMP에 일괄 적용 (BuildGameUI.Execute 실행 시 자동)
+- UnitButton 프리팹 TMP(UnitName, UnitCost)에도 적용
+
+---
+
+### 신규 Editor 스크립트
+
+| 파일 | 역할 |
+|---|---|
+| `Assets/Scripts/Editor/SetUnitButtonSprite.cs` | UnitButton 프리팹 폰트+아웃라인 적용 |
+| `Assets/Scripts/Editor/FixUnitButton.cs` | UnitButton 프리팹 폰트+아웃라인 일괄 Fix |
+| `Assets/Scripts/Editor/DiagnoseOutline.cs` | TMP 아웃라인 적용 상태 진단용 |
+
+---
+
+## 이번 세션 작업 내용 (2026-04-12) — 1차
+
+### 타워 체력바 위치/크기 보정
+
+- **원인:** Tower 초기화 시 `transform.localScale = (0.5, 0.5, 1)` 설정으로 자식인 HealthBarRoot 월드 크기가 절반으로 줄어들고, anchoredPosition.y도 절반 높이로 렌더링됨
+- **수정:** `Unit.Initialize()` Tower 분기에서 HealthBarRoot 보정
+  - `localScale`: 0.01 → 0.02 (부모 scale 0.5 상쇄, 월드 크기 일반 유닛과 동일)
+  - `anchoredPosition.y`: 0.6 → 0.7 (타워 스프라이트 높이 반영)
+- **변경 파일:** `Assets/Scripts/Units/Unit.cs`
 
 ---
 
@@ -34,9 +131,24 @@
 
 | 파일 | 변경 내용 |
 |---|---|
-| `Assets/Scripts/Units/HealthBar.cs` | 자동 숨김 코루틴, SetSortingOrder 추가 |
-| `Assets/Scripts/Units/Unit.cs` | Tower 체력바 보정 제거, _overlaySr 추가, LateUpdate Y-소팅, DamageNumber sortingOrder 수정 |
-| `Assets/Scripts/Units/RankBar.cs` | 가로 바 세로 쌓기 레이아웃, SetSortingOrder 추가 |
+| `Assets/Stage01.unity` | Canvas UI 추가 (GameUI 포함 전체 구성) |
+| `Assets/Scripts/UI/GameUI.cs` | 한글화, UnitButton 텍스트 색상 변경, PositionBottomCenter() 수정 |
+| `Assets/Scripts/Editor/BuildGameUI.cs` | 한글화, 패널 스프라이트 변경, 아웃라인 머티리얼 적용 |
+| `Assets/Fonts/경기천년제목OTF_Bold SDF - Outline.mat` | 신규 — TMP 아웃라인 머티리얼 |
+| `Assets/Prefabs/UnitButton.prefab` | 스프라이트, 폰트, 아웃라인 적용 |
+| `Assets/Scripts/Editor/SetUnitButtonSprite.cs` | 신규 |
+| `Assets/Scripts/Editor/FixUnitButton.cs` | 신규 |
+| `Assets/Scripts/Editor/DiagnoseOutline.cs` | 신규 (진단용) |
+
+---
+
+## 이전 세션 작업 내용 (2026-04-10)
+
+### 체력바 스프라이트 교체 (`Unit.prefab`)
+- Background: `SmallBar_Base_0` (Sliced, 흰색)
+- Fill: `SmallBar_Fill` (흰색, scale y=7, SizeDelta.x=-20)
+- HealthBarRoot: scale 0.016, SizeDelta (94,19), anchoredPosition.y=0.7
+- HealthBar.cs: offsetMax 리셋 코드 제거
 
 ---
 

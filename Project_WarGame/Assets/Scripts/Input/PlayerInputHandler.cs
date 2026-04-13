@@ -149,6 +149,7 @@ public class PlayerInputHandler : MonoBehaviour
     {
         selectedUnit = unit;
         GameUI.Instance?.ShowUnitInfo(unit);
+        SelectionIndicator.Instance?.Show(unit);
         RefreshHighlights();
     }
 
@@ -209,6 +210,7 @@ public class PlayerInputHandler : MonoBehaviour
     {
         GridManager.Instance.ClearHighlights();
         GameUI.Instance?.HideUnitInfo();
+        SelectionIndicator.Instance?.Hide();
         selectedUnit = null;
         moveTiles.Clear();
         attackTiles.Clear();
@@ -221,6 +223,7 @@ public class PlayerInputHandler : MonoBehaviour
         attackTiles.Clear();
         GridManager.Instance.ClearHighlights();
         GameUI.Instance?.HideUnitInfo();
+        SelectionIndicator.Instance?.Hide();
     }
 
     // ── UI Callbacks ──────────────────────────────────────────

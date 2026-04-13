@@ -160,6 +160,18 @@ MonoBehaviour:
     faction: 3
     rank: 0
     detectRange: 0
+  - x: 10
+    y: 10
+    unitType: 5
+    faction: 2
+    rank: 0
+    detectRange: 0
+  - x: 10
+    y: 13
+    unitType: 5
+    faction: 1
+    rank: 0
+    detectRange: 0
   eventTriggers:
   - id: 1
     conditionType: 0
