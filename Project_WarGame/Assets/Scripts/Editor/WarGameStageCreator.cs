@@ -13,7 +13,7 @@ public static class WarGameStageCreator
     private const string BuildingRoot = "Assets/Tiny Swords/Buildings/";
     private const string TileRoot     = "Assets/Tiny Swords/Terrain/Tileset/Tilemap Settings/Sliced Tiles/";
 
-    [MenuItem("Window/WarGame/Create Stage 01")]
+    // [MenuItem("Window/WarGame/Create Stage 01")] — WarGameStageSetup으로 통합됨
     public static void CreateStage01()
     {
         EnsureFolders();
@@ -64,6 +64,10 @@ public static class WarGameStageCreator
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
+
+        // ── Canvas UI 생성 ────────────────────────────────────
+        BuildGameUI.Execute();
+
         Debug.Log("[WarGame] Stage 01 생성 완료! GameData 폴더를 확인하세요.");
     }
 

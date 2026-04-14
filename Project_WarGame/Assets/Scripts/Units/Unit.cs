@@ -290,9 +290,12 @@ public class Unit : MonoBehaviour
     private void PlaceOnTile(TileNode tile)
     {
         if (CurrentTile != null) CurrentTile.OccupyingUnit = null;
-        CurrentTile               = tile;
-        tile.OccupyingUnit        = this;
-        transform.position        = GridManager.Instance.GetWorldCenter(tile.X, tile.Y);
+        CurrentTile          = tile;
+        tile.OccupyingUnit   = this;
+        var pos              = GridManager.Instance.GetWorldCenter(tile.X, tile.Y);
+        if (data != null && data.unitType == UnitType.Tower)
+            pos.y += 0.2f;
+        transform.position   = pos;
     }
 
     private void Die()

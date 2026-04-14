@@ -4,6 +4,13 @@ using System;
 [CreateAssetMenu(fileName = "New MapData", menuName = "WarGame/Map Data")]
 public class MapData : ScriptableObject
 {
+    [Header("스테이지 정보")]
+    public string stageTitle = "새 스테이지";
+
+    [TextArea(2, 5)]
+    public string stageOverview;
+
+    [Header("시나리오")]
     public int width = 10;
     public int height = 8;
     public string scenarioName = "New Scenario";
@@ -11,6 +18,7 @@ public class MapData : ScriptableObject
     [TextArea(3, 10)]
     public string scenarioStory;
 
+    [Header("초기 자원")]
     public int playerStartGold = 100;
     public int enemyStartGold = 100;
 

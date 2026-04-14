@@ -82,10 +82,24 @@ public class GameUI : MonoBehaviour
         settingsPanel?.SetActive(false);
         settingsToggleButton?.onClick.AddListener(ToggleSettings);
 
+        // ExitButton — 스테이지 선택으로 나가기
+        var exitBtn = settingsPanel?.transform.Find("ExitButton")?.GetComponent<Button>();
+        exitBtn?.onClick.AddListener(ExitToStageSelect);
+
+        // CloseButton — 설정창 닫기
+        var closeBtn = settingsPanel?.transform.Find("CloseButton")?.GetComponent<Button>();
+        closeBtn?.onClick.AddListener(ToggleSettings);
+
         if (volumeSlider != null)
         {
-            volumeSlider.value = AudioListener.volume;
-            volumeSlider.onValueChanged.AddListener(v => AudioListener.volume = v);
+            volumeSlider.value   = PlayerPrefs.GetFloat("Volume", 1f);
+            AudioListener.volume = volumeSlider.value;
+            volumeSlider.onValueChanged.AddListener(v =>
+            {
+                AudioListener.volume = v;
+                PlayerPrefs.SetFloat("Volume", v);
+                PlayerPrefs.Save();
+            });
         }
 
         HideUnitInfo();
@@ -154,7 +168,7 @@ public class GameUI : MonoBehaviour
         rt.anchorMin        = new Vector2(0.5f, 0.5f);
         rt.anchorMax        = new Vector2(0.5f, 0.5f);
         rt.pivot            = new Vector2(0.5f, 0.5f);
-        rt.anchoredPosition = new Vector2(0f, -300f);
+        rt.anchoredPosition = new Vector2(-200f, -300f);
     }
 
     public void ShowUnitInfo(Unit unit)

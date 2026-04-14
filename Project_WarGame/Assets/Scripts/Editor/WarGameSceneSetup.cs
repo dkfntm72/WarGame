@@ -12,7 +12,7 @@ using TMPro;
 /// </summary>
 public static class WarGameSceneSetup
 {
-    [MenuItem("Window/WarGame/Setup Stage01 Scene")]
+    // [MenuItem("Window/WarGame/Setup Stage01 Scene")] — WarGameStageSetup으로 통합됨
     public static void SetupScene()
     {
         // ── 1. 새 씬 생성 ─────────────────────────────────────

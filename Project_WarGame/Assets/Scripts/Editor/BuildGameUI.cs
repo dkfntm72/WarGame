@@ -6,7 +6,6 @@ using UnityEditor.SceneManagement;
 
 public class BuildGameUI
 {
-    [UnityEditor.MenuItem("Window/WarGame/Build Stage01 UI")]
     public static void Execute()
     {
         // ── 기존 UI 제거 ──────────────────────────────────────
@@ -168,68 +167,17 @@ public class BuildGameUI
         dt.alignment = TextAlignmentOptions.Center;
         defeatPanel.SetActive(false);
 
-        // ── 설정 패널 ─────────────────────────────────────────
-        var settingsPanel = MakePanel(canvasGO, "SettingsPanel",
-            new Vector2(0.5f,0.5f), new Vector2(0.5f,0.5f), new Vector2(0.5f,0.5f),
-            Vector2.zero, new Vector2(500, 300));
-        SetImgSliced(settingsPanel, hudSprite);
+        // ── 설정 패널 (프리팹 인스턴스화) ────────────────────────
+        var settingsPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/SettingsPanel.prefab");
+        if (settingsPrefab == null)
+        {
+            CreateSettingsPanelPrefab.Execute();
+            settingsPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/SettingsPanel.prefab");
+        }
+        var settingsPanel = (GameObject)PrefabUtility.InstantiatePrefab(settingsPrefab, canvasGO.transform);
         settingsPanel.SetActive(false);
 
-        MakeTMP(settingsPanel, "SettingsTitle", "설정", fontAsset, 36,
-            new Vector2(0,1), new Vector2(1,1), new Vector2(0,-15), new Vector2(0, 50));
-
-        // 볼륨 슬라이더
-        var sliderGO = new GameObject("VolumeSlider");
-        sliderGO.transform.SetParent(settingsPanel.transform, false);
-        var sliderRT = sliderGO.AddComponent<RectTransform>();
-        sliderRT.anchorMin = new Vector2(0.1f,0.5f); sliderRT.anchorMax = new Vector2(0.9f,0.5f);
-        sliderRT.anchoredPosition = new Vector2(0, 10); sliderRT.sizeDelta = new Vector2(0, 30);
-        var slider = sliderGO.AddComponent<Slider>();
-        slider.minValue = 0; slider.maxValue = 1; slider.value = 1;
-
-        var bgGO = new GameObject("Background");
-        bgGO.transform.SetParent(sliderGO.transform, false);
-        var bgRT = bgGO.AddComponent<RectTransform>();
-        bgRT.anchorMin = Vector2.zero; bgRT.anchorMax = Vector2.one; bgRT.sizeDelta = Vector2.zero;
-        bgGO.AddComponent<Image>().color = new Color(0.3f,0.3f,0.3f,1f);
-
-        var fillArea = new GameObject("Fill Area");
-        fillArea.transform.SetParent(sliderGO.transform, false);
-        var faRT = fillArea.AddComponent<RectTransform>();
-        faRT.anchorMin = Vector2.zero; faRT.anchorMax = Vector2.one;
-        faRT.sizeDelta = new Vector2(-20, 0); faRT.anchoredPosition = new Vector2(-5,0);
-        var fillGO = new GameObject("Fill");
-        fillGO.transform.SetParent(fillArea.transform, false);
-        var fillRT = fillGO.AddComponent<RectTransform>();
-        fillRT.anchorMin = Vector2.zero; fillRT.anchorMax = new Vector2(1,1); fillRT.sizeDelta = new Vector2(10,0);
-        var fillImg = fillGO.AddComponent<Image>();
-        fillImg.color = new Color(0.9f, 0.7f, 0.2f, 1f);
-        slider.fillRect = fillRT;
-
-        var handleArea = new GameObject("Handle Slide Area");
-        handleArea.transform.SetParent(sliderGO.transform, false);
-        var haRT = handleArea.AddComponent<RectTransform>();
-        haRT.anchorMin = Vector2.zero; haRT.anchorMax = Vector2.one;
-        haRT.sizeDelta = new Vector2(-20,0);
-        var handleGO = new GameObject("Handle");
-        handleGO.transform.SetParent(handleArea.transform, false);
-        var handleRT = handleGO.AddComponent<RectTransform>();
-        handleRT.sizeDelta = new Vector2(30,0);
-        handleGO.AddComponent<Image>().color = Color.white;
-        slider.handleRect = handleRT;
-        slider.targetGraphic = handleGO.GetComponent<Image>();
-
-        // 볼륨 라벨
-        MakeTMP(settingsPanel, "VolumeLabel", "음량", fontAsset, 24,
-            new Vector2(0.1f, 0.5f), new Vector2(0.9f, 0.5f),
-            new Vector2(0, 50), new Vector2(0, 30));
-
-        // 나가기 버튼
-        var exitBtn = MakeButtonBox(settingsPanel, "ExitButton", "스테이지 선택", fontAsset, 24,
-            new Vector2(0.5f,0), new Vector2(0.5f,0), new Vector2(0.5f,0),
-            new Vector2(0, 25), new Vector2(220, 55),
-            new Color(0.55f, 0.15f, 0.15f, 1f));
-        exitBtn.onClick.AddListener(() => UnityEngine.SceneManagement.SceneManager.LoadScene("StageSelect"));
+        var slider = settingsPanel.GetComponentInChildren<UnityEngine.UI.Slider>();
 
         // ── 이벤트 팝업 패널 ──────────────────────────────────
         var eventPanel = MakePanel(canvasGO, "EventPanel",

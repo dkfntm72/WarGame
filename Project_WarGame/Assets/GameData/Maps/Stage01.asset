@@ -12,6 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab7a4779992005e4e8b1898d32c4b2c1, type: 3}
   m_Name: Stage01
   m_EditorClassIdentifier: 
+  stageTitle: "\uC57D\uC790\uC758 \uCCAB \uC2B9\uB9AC"
+  stageOverview: "\uCD5C\uC545\uC758 \uC0C1\uD669\uC774\uB2E4. \uAD6D\uACE0\uB294
+    \uBC14\uB2E5\uB098\uACE0, \uAD70\uB300\uB294 \uC18C\uC218\uC758 \uBBFC\uBCD1\uB300\uBFD0.
+    \uC124\uC0C1\uAC00\uC0C1\uC73C\uB85C \uBD81\uBC29 \uACF5\uAD6D\uC758 \uC57D\uD0C8\uB300\uAC00
+    \uAD6D\uACBD\uC744 \uB118\uC5B4\uC628\uB2E4"
   width: 20
   height: 20
   scenarioName: "\uC81C1\uC7A5: \uAD6D\uACBD\uC758 \uC804\uD22C"
