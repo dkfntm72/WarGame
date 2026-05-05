@@ -98,7 +98,8 @@ public class AllyAI : MonoBehaviour
             .FirstOrDefault();
 
     private bool InAttackRange(Unit attacker, Unit target) =>
-        ManhattanDist(attacker.CurrentTile, target.CurrentTile) <= attacker.data.attackRange;
+        ManhattanDist(attacker.CurrentTile, target.CurrentTile) <= attacker.data.attackRange
+        && GridManager.CanAttackBetween(attacker.CurrentTile, target.CurrentTile, attacker.data.attackRange);
 
     private int ManhattanDist(TileNode a, TileNode b) =>
         Mathf.Abs(a.X - b.X) + Mathf.Abs(a.Y - b.Y);

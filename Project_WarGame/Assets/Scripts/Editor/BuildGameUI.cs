@@ -63,44 +63,45 @@ public class BuildGameUI
         canvas.sortingOrder = 10;
         var scaler = canvasGO.AddComponent<CanvasScaler>();
         scaler.uiScaleMode         = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1080, 1920);
+        scaler.referenceResolution = new Vector2(1920, 1080);
         scaler.matchWidthOrHeight  = 0.5f;
         canvasGO.AddComponent<GraphicRaycaster>();
 
         // ── HUD (상단바) ──────────────────────────────────────
         var hud   = MakePanel(canvasGO, "HUD",
-            new Vector2(0,1), new Vector2(1,1), new Vector2(0.5f,1f),
-            Vector2.zero, new Vector2(0, 120));
+            new Vector2(0,1), new Vector2(1,1), new Vector2(0.5f,0.5f),
+            new Vector2(0,-40), new Vector2(0, 80));
         var hudImg = hud.GetComponent<Image>();
         if (hudSprite != null) { hudImg.sprite = hudSprite; hudImg.type = Image.Type.Sliced; hudImg.color = Color.white; }
         else                   { hudImg.color  = new Color(0.08f, 0.06f, 0.12f, 0.92f); }
 
-        // TurnText (좌)
-        var turnText = MakeTMP(hud, "TurnText", "1턴 - 플레이어", fontAsset, 36,
-            new Vector2(0,0), new Vector2(0.45f,1), new Vector2(20,-5), new Vector2(-10,-10));
+        // TurnText (좌 절반, 수직 중앙)
+        var turnText = MakeTMP(hud, "TurnText", "1턴 - 플레이어", fontAsset, 28,
+            new Vector2(0,0.5f), new Vector2(0.5f,0.5f), new Vector2(20,0), new Vector2(-20,30));
 
-        // GoldText (중앙)
-        var goldText = MakeTMP(hud, "GoldText", "골드: 100", fontAsset, 36,
-            new Vector2(0.3f,0), new Vector2(0.7f,1), new Vector2(0,-5), new Vector2(0,-10));
+        // GoldText (우 절반, 수직 중앙)
+        var goldText = MakeTMP(hud, "GoldText", "골드: 100", fontAsset, 28,
+            new Vector2(0.5f,0.5f), new Vector2(1f,0.5f), new Vector2(-20,0), new Vector2(-20,30));
         goldText.alignment = TextAlignmentOptions.Center;
 
-        // 설정 버튼 (우상단, 아이콘)
-        var settingsBtn = MakeButtonBox(hud, "SettingsButton", "", fontAsset, 26,
-            new Vector2(1,0.5f), new Vector2(1,0.5f), new Vector2(1,0.5f),
-            new Vector2(-50, 0), new Vector2(80, 80),
-            Color.white);
-        if (settingsIconSprite != null)
-        {
-            var sImg = settingsBtn.GetComponent<Image>();
-            sImg.sprite = settingsIconSprite;
-            sImg.type   = Image.Type.Simple;
-            sImg.preserveAspect = true;
-        }
+        // 설정 버튼 (우측 세로 stretch)
+        var settingsBtnGO = new GameObject("SettingsButton");
+        settingsBtnGO.transform.SetParent(hud.transform, false);
+        var sbRt2 = settingsBtnGO.AddComponent<RectTransform>();
+        sbRt2.anchorMin        = new Vector2(1f, 0f);
+        sbRt2.anchorMax        = new Vector2(1f, 1f);
+        sbRt2.pivot            = new Vector2(1f, 0.5f);
+        sbRt2.anchoredPosition = new Vector2(-10f, 0f);
+        sbRt2.sizeDelta        = new Vector2(65f, -10f);
+        var settingsBtn = settingsBtnGO.AddComponent<Button>();
+        var sbImg = settingsBtnGO.AddComponent<Image>();
+        if (settingsIconSprite != null) { sbImg.sprite = settingsIconSprite; sbImg.type = Image.Type.Simple; sbImg.preserveAspect = true; }
+        else sbImg.color = Color.white;
 
         // ── End Turn 버튼 (우하단) ────────────────────────────
-        var endTurnBtn = MakeButtonBox(canvasGO, "EndTurnButton", "턴 종료", fontAsset, 28,
-            new Vector2(1,0), new Vector2(1,0), new Vector2(0.5f,0),
-            new Vector2(-110, 60), new Vector2(160, 160),
+        var endTurnBtn = MakeButtonBox(canvasGO, "EndTurnButton", "턴 종료", fontAsset, 22,
+            new Vector2(1,0), new Vector2(1,0), new Vector2(0.5f,0.5f),
+            new Vector2(-160, 80), new Vector2(150, 60),
             Color.white);
         if (btnSprite != null)
         {
@@ -112,32 +113,32 @@ public class BuildGameUI
         // ── 유닛 정보 패널 (좌하단) ───────────────────────────
         var unitPanel = MakePanel(canvasGO, "UnitInfoPanel",
             new Vector2(0,0), new Vector2(0,0), new Vector2(0,0),
-            new Vector2(15, 15), new Vector2(320, 170));
+            new Vector2(20, 20), new Vector2(280, 130));
         SetImgSliced(unitPanel, regularPaperSprite);
         unitPanel.SetActive(false);
 
-        var unitName   = MakeTMP(unitPanel, "UnitName",   "Unit Name", fontAsset, 26,
-            new Vector2(0,1), new Vector2(1,1), new Vector2(10,-10), new Vector2(-20, 32));
+        var unitName   = MakeTMP(unitPanel, "UnitName",   "Unit Name", fontAsset, 22,
+            new Vector2(0,1), new Vector2(1,1), new Vector2(10,-8),  new Vector2(-20, 28));
         unitName.color = Color.black;
-        var unitHp     = MakeTMP(unitPanel, "UnitHp",     "HP: -",     fontAsset, 20,
-            new Vector2(0,1), new Vector2(1,1), new Vector2(10,-48), new Vector2(-20, 26));
+        var unitHp     = MakeTMP(unitPanel, "UnitHp",     "HP: -",     fontAsset, 18,
+            new Vector2(0,1), new Vector2(1,1), new Vector2(10,-40), new Vector2(-20, 24));
         unitHp.color = Color.black;
-        var unitStats  = MakeTMP(unitPanel, "UnitStats",  "",          fontAsset, 17,
-            new Vector2(0,1), new Vector2(1,1), new Vector2(10,-80), new Vector2(-20, 52));
+        var unitStats  = MakeTMP(unitPanel, "UnitStats",  "",          fontAsset, 15,
+            new Vector2(0,1), new Vector2(1,1), new Vector2(10,-68), new Vector2(-20, 44));
         unitStats.enableWordWrapping = false;
         unitStats.color = Color.black;
-        var unitStatus = MakeTMP(unitPanel, "UnitStatus", "",          fontAsset, 18,
-            new Vector2(0,1), new Vector2(1,1), new Vector2(10,-138), new Vector2(-20, 26));
+        var unitStatus = MakeTMP(unitPanel, "UnitStatus", "",          fontAsset, 16,
+            new Vector2(0,1), new Vector2(1,1), new Vector2(10,-116), new Vector2(-20, 24));
 
-        // ── 건물 패널 (hidden, 화면 중앙 약간 위) ────────────────
+        // ── 건물 패널 (hidden) ────────────────────────────────
         var buildingPanel = MakePanel(canvasGO, "BuildingPanel",
-            new Vector2(0.5f,0.5f), new Vector2(0.5f,0.5f), new Vector2(0.5f,0.5f),
-            new Vector2(0, -300), new Vector2(770, 280));
+            new Vector2(0,0), new Vector2(0,0), new Vector2(0,0),
+            new Vector2(-180, 20), new Vector2(320, 180));
         SetImgSliced(buildingPanel, hudSprite);
         buildingPanel.SetActive(false);
 
-        MakeTMP(buildingPanel, "BuildingTitle", "유닛 훈련", fontAsset, 22,
-            new Vector2(0,1), new Vector2(1,1), new Vector2(10,-8), new Vector2(-20, 28));
+        MakeTMP(buildingPanel, "BuildingTitle", "유닛 훈련", fontAsset, 18,
+            new Vector2(0,1), new Vector2(1,1), new Vector2(8,-6), new Vector2(-16, 24));
 
         var containerGO = MakePanel(buildingPanel, "UnitButtonContainer",
             new Vector2(0,0), new Vector2(1,1), new Vector2(0,0),
@@ -151,18 +152,18 @@ public class BuildGameUI
         // ── 승리/패배 패널 ────────────────────────────────────
         var victoryPanel = MakePanel(canvasGO, "VictoryPanel",
             new Vector2(0.5f,0.5f), new Vector2(0.5f,0.5f), new Vector2(0.5f,0.5f),
-            Vector2.zero, new Vector2(600, 320));
+            Vector2.zero, new Vector2(500, 300));
         SetImgSliced(victoryPanel, hudSprite);
-        var vt = MakeTMP(victoryPanel, "VictoryText", "승리!", fontAsset, 72,
+        var vt = MakeTMP(victoryPanel, "VictoryText", "승리!", fontAsset, 64,
             Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         vt.alignment = TextAlignmentOptions.Center;
         victoryPanel.SetActive(false);
 
         var defeatPanel = MakePanel(canvasGO, "DefeatPanel",
             new Vector2(0.5f,0.5f), new Vector2(0.5f,0.5f), new Vector2(0.5f,0.5f),
-            Vector2.zero, new Vector2(600, 320));
+            Vector2.zero, new Vector2(500, 300));
         SetImgSliced(defeatPanel, hudSprite);
-        var dt = MakeTMP(defeatPanel, "DefeatText", "패배...", fontAsset, 72,
+        var dt = MakeTMP(defeatPanel, "DefeatText", "패배...", fontAsset, 64,
             Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         dt.alignment = TextAlignmentOptions.Center;
         defeatPanel.SetActive(false);
@@ -171,29 +172,78 @@ public class BuildGameUI
         var settingsPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/SettingsPanel.prefab");
         if (settingsPrefab == null)
         {
-            CreateSettingsPanelPrefab.Execute();
-            settingsPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/SettingsPanel.prefab");
+            Debug.LogWarning("[BuildGameUI] Assets/Prefabs/SettingsPanel.prefab 없음 — 설정 패널 생략");
+            return;
         }
         var settingsPanel = (GameObject)PrefabUtility.InstantiatePrefab(settingsPrefab, canvasGO.transform);
         settingsPanel.SetActive(false);
 
         var slider = settingsPanel.GetComponentInChildren<UnityEngine.UI.Slider>();
 
-        // ── 이벤트 팝업 패널 ──────────────────────────────────
-        var eventPanel = MakePanel(canvasGO, "EventPanel",
-            Vector2.zero, Vector2.one, new Vector2(0.5f,0.5f),
-            Vector2.zero, Vector2.zero);
-        SetImgColor(eventPanel, new Color(0,0,0,0.55f));
-        eventPanel.SetActive(false);
+        // ── 대화창 (하단 고정 바) ─────────────────────────────
+        var eventPanel = new GameObject("EventPanel");
+        eventPanel.transform.SetParent(canvasGO.transform, false);
+        var epRt = eventPanel.AddComponent<RectTransform>();
+        epRt.anchorMin        = new Vector2(0.03f, 0f);
+        epRt.anchorMax        = new Vector2(0.97f, 0f);
+        epRt.pivot            = new Vector2(0.5f, 0f);
+        epRt.anchoredPosition = new Vector2(0f, 15f);
+        epRt.sizeDelta        = new Vector2(0f, 185f);
+        var epCanvas = eventPanel.AddComponent<Canvas>();
+        epCanvas.overrideSorting = true;
+        epCanvas.sortingOrder   = 999;
+        eventPanel.AddComponent<GraphicRaycaster>();
+        eventPanel.AddComponent<Image>().color = new Color(0.08f, 0.06f, 0.03f, 0.96f);
 
-        var eventTextGO = MakePanel(eventPanel, "EventTextBox",
-            new Vector2(0.1f,0.3f), new Vector2(0.9f,0.7f), new Vector2(0.5f,0.5f),
-            Vector2.zero, Vector2.zero);
-        SetImgColor(eventTextGO, new Color(0.06f, 0.05f, 0.10f, 0.95f));
-        var eventText = MakeTMP(eventTextGO, "EventText", "", fontAsset, 32,
-            Vector2.zero, Vector2.one, Vector2.zero, new Vector2(-30,-30));
-        eventText.alignment = TextAlignmentOptions.Center;
+        // 상단 황금 테두리
+        var borderTop = new GameObject("BorderTop");
+        borderTop.transform.SetParent(eventPanel.transform, false);
+        var btRt = borderTop.AddComponent<RectTransform>();
+        btRt.anchorMin        = new Vector2(0f, 1f);
+        btRt.anchorMax        = new Vector2(1f, 1f);
+        btRt.pivot            = new Vector2(0.5f, 1f);
+        btRt.anchoredPosition = Vector2.zero;
+        btRt.sizeDelta        = new Vector2(0f, 3f);
+        borderTop.AddComponent<Image>().color = new Color(0.9f, 0.75f, 0.2f, 1f);
+
+        // 화자 탭 (SpeakerBox)
+        var speakerBox = new GameObject("SpeakerBox");
+        speakerBox.transform.SetParent(eventPanel.transform, false);
+        var sbRt = speakerBox.AddComponent<RectTransform>();
+        sbRt.anchorMin        = new Vector2(0f, 1f);
+        sbRt.anchorMax        = new Vector2(0f, 1f);
+        sbRt.pivot            = new Vector2(0f, 0f);
+        sbRt.anchoredPosition = new Vector2(20f, 0f);
+        sbRt.sizeDelta        = new Vector2(180f, 40f);
+        speakerBox.AddComponent<Image>().color = new Color(0.08f, 0.06f, 0.03f, 1f);
+        var speakerTmp = MakeTMP(speakerBox, "SpeakerName", "", fontAsset, 22,
+            Vector2.zero, Vector2.one, new Vector2(8f, -4f), new Vector2(-16f, -8f),
+            TextAlignmentOptions.Center);
+        speakerTmp.color = new Color(0.95f, 0.85f, 0.5f, 1f);
+        speakerBox.SetActive(false);
+
+        // 대사 본문
+        var eventText = MakeTMP(eventPanel, "EventText", "", fontAsset, 28,
+            Vector2.zero, Vector2.one, new Vector2(24f, -35f), new Vector2(-48f, -55f));
         eventText.enableWordWrapping = true;
+
+        // 힌트 텍스트 (▼ 클릭하여 계속)
+        var hintGO = new GameObject("HintText");
+        hintGO.transform.SetParent(eventPanel.transform, false);
+        var hintRt = hintGO.AddComponent<RectTransform>();
+        hintRt.anchorMin        = new Vector2(1f, 0f);
+        hintRt.anchorMax        = new Vector2(1f, 0f);
+        hintRt.pivot            = new Vector2(1f, 0f);
+        hintRt.anchoredPosition = new Vector2(-16f, 12f);
+        hintRt.sizeDelta        = new Vector2(200f, 28f);
+        var hintTmp = hintGO.AddComponent<TextMeshProUGUI>();
+        hintTmp.text      = "▼ 클릭하여 계속";
+        hintTmp.fontSize  = 18;
+        hintTmp.color     = new Color(0.7f, 0.7f, 0.7f, 0.8f);
+        hintTmp.alignment = TextAlignmentOptions.Right;
+        if (fontAsset != null) hintTmp.font = fontAsset;
+
+        eventPanel.SetActive(false);
 
         // ── GameUI 컴포넌트 연결 ──────────────────────────────
         var gameUI = canvasGO.AddComponent<GameUI>();
@@ -214,6 +264,13 @@ public class BuildGameUI
         gameUI.volumeSlider         = slider;
         gameUI.eventPanel           = eventPanel;
         gameUI.eventText            = eventText;
+        gameUI.dialogueSpeakerText  = speakerTmp;
+
+        // SettingsPanel 내 승패조건 텍스트 연결
+        var covTmp = settingsPanel
+            .transform.Find("ConditionsOfVictoryText/COV")
+            ?.GetComponent<TextMeshProUGUI>();
+        gameUI.conditionsOfVictoryText = covTmp;
 
         // UnitButton 프리팹 연결
         var unitBtnPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/UnitButton.prefab");

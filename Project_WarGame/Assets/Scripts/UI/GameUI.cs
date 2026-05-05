@@ -35,17 +35,23 @@ public class GameUI : MonoBehaviour
     public Button     settingsToggleButton;
     public GameObject settingsPanel;
     public UnityEngine.UI.Slider volumeSlider;
+    public TextMeshProUGUI conditionsOfVictoryText;
 
-    [Header("Event Popup")]
+    [Header("Dialogue Box")]
     public GameObject       eventPanel;
-    public TextMeshProUGUI  eventText;
-    public Button           eventConfirmButton;
+    public TextMeshProUGUI  eventText;          // 대사 본문
+    public TextMeshProUGUI  dialogueSpeakerText; // 화자 이름
+    public Button           eventConfirmButton;  // 미사용 (호환용)
     public bool IsEventShowing  => eventPanel   != null && eventPanel.activeInHierarchy;
     public bool IsSettingsOpen  => settingsPanel != null && settingsPanel.activeInHierarchy;
 
-    private Action _eventOnConfirm;
-    private bool   _isVictory;
-    private Unit   _displayedUnit;
+    private Action   _eventOnConfirm;
+    private bool     _isVictory;
+    private Unit     _displayedUnit;
+    // 대화 진행 상태
+    private string[] _dialogueLines;
+    private string   _dialogueSpeakerName;
+    private int      _dialogueIndex;
 
     private void Awake()
     {
@@ -57,14 +63,41 @@ public class GameUI : MonoBehaviour
     {
         if (IsEventShowing && Input.GetMouseButtonUp(0))
         {
+            AdvanceDialogue();
+        }
+        else if (_isVictory && Input.GetMouseButtonUp(0))
+        {
+            SceneManager.LoadScene("StageSelect");
+        }
+    }
+
+    private void AdvanceDialogue()
+    {
+        _dialogueIndex++;
+        if (_dialogueLines == null || _dialogueIndex >= _dialogueLines.Length)
+        {
             eventPanel.SetActive(false);
             var cb = _eventOnConfirm;
             _eventOnConfirm = null;
             cb?.Invoke();
         }
-        else if (_isVictory && Input.GetMouseButtonUp(0))
+        else
         {
-            SceneManager.LoadScene("StageSelect");
+            ShowDialogueLine(_dialogueIndex);
+        }
+    }
+
+    private void ShowDialogueLine(int index)
+    {
+        if (eventText != null)
+            eventText.text = _dialogueLines[index];
+
+        // 화자 표시: 해당 줄에 "이름:" 형식이 있으면 덮어씀
+        string speaker = _dialogueSpeakerName ?? "";
+        if (dialogueSpeakerText != null)
+        {
+            dialogueSpeakerText.text = speaker;
+            dialogueSpeakerText.transform.parent.gameObject.SetActive(!string.IsNullOrWhiteSpace(speaker));
         }
     }
 
@@ -81,6 +114,9 @@ public class GameUI : MonoBehaviour
 
         settingsPanel?.SetActive(false);
         settingsToggleButton?.onClick.AddListener(ToggleSettings);
+
+        if (conditionsOfVictoryText != null && GameManager.Instance?.currentMap != null)
+            conditionsOfVictoryText.text = GameManager.Instance.currentMap.winLossDescription;
 
         // ExitButton — 스테이지 선택으로 나가기
         var exitBtn = settingsPanel?.transform.Find("ExitButton")?.GetComponent<Button>();
@@ -235,27 +271,42 @@ public class GameUI : MonoBehaviour
     }
 
     // ── Building panel ────────────────────────────────────────
-    // ── Event popup ───────────────────────────────────────────
-    public void ShowEventText(string text, Action onConfirm)
+    // ── Dialogue ──────────────────────────────────────────────
+    /// <summary>연속 대사를 순서대로 표시. 클릭할 때마다 다음 줄로 진행.</summary>
+    public void ShowDialogue(string[] lines, string speakerName, Action onConfirm)
     {
         if (eventPanel == null)
         {
-            Debug.LogWarning("[GameUI] eventPanel이 연결되지 않았습니다. Inspector에서 할당하세요.");
+            Debug.LogWarning("[GameUI] eventPanel이 연결되지 않았습니다.");
+            onConfirm?.Invoke();
+            return;
+        }
+        if (lines == null || lines.Length == 0)
+        {
             onConfirm?.Invoke();
             return;
         }
 
-        _eventOnConfirm = onConfirm;
+        _dialogueLines       = lines;
+        _dialogueSpeakerName = speakerName ?? "";
+        _dialogueIndex       = 0;
+        _eventOnConfirm      = onConfirm;
 
-        eventPanel.SetActive(true);
-
-        if (eventText != null)
-            eventText.text = text;
-
-        // 확인 버튼은 사용하지 않음 — 화면 클릭으로 닫힘
         if (eventConfirmButton != null)
             eventConfirmButton.gameObject.SetActive(false);
+
+        eventPanel.SetActive(true);
+        ShowDialogueLine(0);
     }
+
+    public void ShowNotice(string message)
+    {
+        if (unitStatusText != null) unitStatusText.text = message;
+    }
+
+    /// <summary>레거시 단일 텍스트 호환용.</summary>
+    public void ShowEventText(string text, Action onConfirm) =>
+        ShowDialogue(new[] { text }, "", onConfirm);
 
     // ── Building panel ────────────────────────────────────────
     public void ShowBuildingPanel(Building building)
@@ -323,9 +374,10 @@ public class GameUI : MonoBehaviour
             {
                 button.interactable = true;
                 var t = uType;
+                var b = building;
                 button.onClick.AddListener(() =>
                 {
-                    PlayerInputHandler.Instance.OnProduceUnit(t);
+                    PlayerInputHandler.Instance.OnProduceUnit(t, b);
                     buildingPanel.SetActive(false);
                 });
             }

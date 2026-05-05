@@ -59,8 +59,10 @@ public enum CameraEdge
 public enum EventConditionType
 {
     OnTileEnter,
-    OnTurnStart,       // 플레이어 턴 N 시작
-    OnEnemyTurnStart,  // 적 턴 N 시작
+    OnTurnStart,         // 플레이어 턴 N 시작
+    OnEnemyTurnStart,    // 적 턴 N 시작
+    OnStageStart,        // 스테이지 시작 시 (맵 로드 완료 직후)
+    OnBuildingCapture,   // 특정 건물 점령 시 (x1,y1 위치의 건물, captureByFaction으로 팩션 필터)
 }
 
 public enum TriggerActionType

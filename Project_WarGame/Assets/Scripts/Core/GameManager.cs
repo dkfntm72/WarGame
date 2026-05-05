@@ -41,7 +41,7 @@ public class GameManager : MonoBehaviour
 
     private void LoadMap()
     {
-        Debug.Log($"[GameManager] LoadMap 시작: {currentMap.scenarioName} ({currentMap.width}x{currentMap.height})");
+        Debug.Log($"[GameManager] LoadMap 시작: {currentMap.stageTitle} ({currentMap.width}x{currentMap.height})");
         Debug.Log($"[GameManager] settings={settings != null}, prefab={settings?.unitPrefab != null}, buildingPrefab={settings?.buildingPrefab != null}");
 
         gridManager.Initialize(currentMap, settings);
@@ -76,6 +76,7 @@ public class GameManager : MonoBehaviour
         CameraDragController.Instance?.PositionAtMapEdge(currentMap.cameraStartEdge);
 
         EventTriggerManager.Instance?.Initialize(currentMap);
+        EventTriggerManager.Instance?.OnStageStart();
 
         turnManager.StartGame();
     }
@@ -111,6 +112,7 @@ public class GameManager : MonoBehaviour
         if (old == Faction.Enemy || newFaction == Faction.Enemy)
             RebuildUnlocks(Faction.Enemy);
 
+        EventTriggerManager.Instance?.OnBuildingCaptured(building, newFaction);
         turnManager.CheckVictoryConditions();
     }
 

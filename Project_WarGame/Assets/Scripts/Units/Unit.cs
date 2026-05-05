@@ -184,7 +184,8 @@ public class Unit : MonoBehaviour
         if (CurrentTile == null || attacker.CurrentTile == null) return false;
         int dist = Mathf.Abs(CurrentTile.X - attacker.CurrentTile.X)
                  + Mathf.Abs(CurrentTile.Y - attacker.CurrentTile.Y);
-        return dist <= data.attackRange;
+        if (dist > data.attackRange) return false;
+        return GridManager.CanAttackBetween(CurrentTile, attacker.CurrentTile, data.attackRange);
     }
 
     // 반격 실행: 공격력의 50%, 방어력 적용
@@ -346,7 +347,8 @@ public class Unit : MonoBehaviour
             if (Mathf.Abs(dx) + Mathf.Abs(dy) > data.attackRange) continue;
             if (dx == 0 && dy == 0) continue;
             var node = GridManager.Instance.GetTile(CurrentTile.X + dx, CurrentTile.Y + dy);
-            if (node?.OccupyingUnit != null && FactionHelper.IsHostileTo(faction, node.OccupyingUnit.faction))
+            if (node?.OccupyingUnit != null && FactionHelper.IsHostileTo(faction, node.OccupyingUnit.faction)
+                && GridManager.CanAttackBetween(CurrentTile, node, data.attackRange))
                 return true;
         }
         return false;

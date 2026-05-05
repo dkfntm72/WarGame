@@ -182,9 +182,10 @@ public class PlayerInputHandler : MonoBehaviour
                     && t.OccupyingUnit.faction == Faction.Player
                     && t.OccupyingUnit != selectedUnit);
             else
-                // 일반 유닛: 범위 내 적 칸만 표시
+                // 일반 유닛: 범위 내 적 칸만 표시 (근접은 층 간 공격 불가)
                 attackTiles = inRange.FindAll(t => t.HasUnit
-                    && t.OccupyingUnit.faction == Faction.Enemy);
+                    && t.OccupyingUnit.faction == Faction.Enemy
+                    && GridManager.CanAttackBetween(selectedUnit.CurrentTile, t, selectedUnit.data.attackRange));
         }
 
         GridManager.Instance.ShowBothHighlights(moveTiles, attackTiles, settings);
@@ -233,37 +234,22 @@ public class PlayerInputHandler : MonoBehaviour
         TurnManager.Instance.EndPlayerTurn();
     }
 
-    public void OnProduceUnit(UnitType type)
+    public void OnProduceUnit(UnitType type, Building castle)
     {
         if (TurnManager.Instance.CurrentState != GameState.PlayerTurn) return;
-
-        var castle = GameManager.Instance.Buildings.Find(
-            b => b.faction == Faction.Player && b.data.buildingType == BuildingType.Castle);
         if (castle == null) return;
 
         var uData = GameManager.Instance.settings.GetUnitData(type);
         if (!ResourceManager.Instance.SpendGold(Faction.Player, uData.goldCost)) return;
 
-        var spawnTile = FindEmptyAdjacent(castle.tile);
-        if (spawnTile == null)
+        if (castle.tile.HasUnit)
         {
             ResourceManager.Instance.AddGold(Faction.Player, uData.goldCost);
+            GameUI.Instance?.ShowNotice("성 위에 유닛이 있어 생산할 수 없습니다.");
             return;
         }
 
-        GameManager.Instance.SpawnUnit(uData, Faction.Player, spawnTile);
+        GameManager.Instance.SpawnUnit(uData, Faction.Player, castle.tile);
         GameUI.Instance?.HideUnitInfo();
-    }
-
-    private TileNode FindEmptyAdjacent(TileNode center)
-    {
-        int[] dx = { 0, 0, -1, 1 };
-        int[] dy = { 1, -1, 0, 0 };
-        for (int i = 0; i < 4; i++)
-        {
-            var t = GridManager.Instance.GetTile(center.X + dx[i], center.Y + dy[i]);
-            if (t != null && t.IsWalkable && !t.HasUnit) return t;
-        }
-        return null;
     }
 }

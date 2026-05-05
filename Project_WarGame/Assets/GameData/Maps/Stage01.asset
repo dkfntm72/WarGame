@@ -17,14 +17,10 @@ MonoBehaviour:
     \uBC14\uB2E5\uB098\uACE0, \uAD70\uB300\uB294 \uC18C\uC218\uC758 \uBBFC\uBCD1\uB300\uBFD0.
     \uC124\uC0C1\uAC00\uC0C1\uC73C\uB85C \uBD81\uBC29 \uACF5\uAD6D\uC758 \uC57D\uD0C8\uB300\uAC00
     \uAD6D\uACBD\uC744 \uB118\uC5B4\uC628\uB2E4"
+  winLossDescription: "\uC801\uAD70\uC804\uBA78"
   width: 20
   height: 20
-  scenarioName: "\uC81C1\uC7A5: \uAD6D\uACBD\uC758 \uC804\uD22C"
-  scenarioStory: "\uC801\uAD70\uC774 \uAD6D\uACBD\uC744 \uCE68\uBC94\uD588\uB2E4.
-    \uC544\uAD70 \uC131\uC744 \uC0AC\uC218\uD558\uACE0 \uC801\uC758 \uC131\uC744
-    \uD568\uB77D\uD558\uB77C!\n\n\uD78C\uD2B8: \uC911\uC559\uC758 \uAC15\uC744 \uC6B0\uD68C\uD558\uC5EC
-    \uC801\uC758 \uCE21\uBA74\uC744 \uACF5\uB7B5\uD558\uB77C."
-  playerStartGold: 100
+  playerStartGold: 200
   enemyStartGold: 80
   cameraStartEdge: 2
   victoryCondition: 0
@@ -42,167 +38,96 @@ MonoBehaviour:
     y: 16
     buildingType: 3
     faction: 1
-  - x: 2
-    y: 13
-    buildingType: 1
-    faction: 0
-  - x: 17
-    y: 15
-    buildingType: 2
-    faction: 0
-  units:
-  - x: 14
-    y: 4
-    unitType: 0
-    faction: 2
-    rank: 0
-    detectRange: 0
-  - x: 14
-    y: 3
-    unitType: 0
-    faction: 2
-    rank: 0
-    detectRange: 0
-  - x: 15
-    y: 4
-    unitType: 0
-    faction: 2
-    rank: 0
-    detectRange: 0
-  - x: 8
-    y: 15
-    unitType: 1
-    faction: 1
-    rank: 0
-    detectRange: 0
-  - x: 9
-    y: 15
-    unitType: 1
-    faction: 1
-    rank: 0
-    detectRange: 0
-  - x: 10
-    y: 15
-    unitType: 1
-    faction: 1
-    rank: 0
-    detectRange: 0
   - x: 7
-    y: 14
-    unitType: 2
+    y: 18
+    buildingType: 3
     faction: 1
-    rank: 0
-    detectRange: 0
   - x: 9
-    y: 13
-    unitType: 0
+    y: 18
+    buildingType: 3
     faction: 1
-    rank: 5
-    detectRange: 0
-  - x: 8
-    y: 14
-    unitType: 0
-    faction: 1
-    rank: 0
-    detectRange: 0
-  - x: 9
-    y: 14
-    unitType: 0
-    faction: 1
-    rank: 0
-    detectRange: 0
-  - x: 10
-    y: 14
-    unitType: 0
-    faction: 1
-    rank: 0
-    detectRange: 0
-  - x: 11
-    y: 12
-    unitType: 4
-    faction: 1
-    rank: 5
-    detectRange: 0
-  - x: 10
-    y: 12
-    unitType: 4
-    faction: 1
-    rank: 5
-    detectRange: 0
-  - x: 15
-    y: 15
-    unitType: 0
-    faction: 3
-    rank: 0
-    detectRange: 0
-  - x: 4
-    y: 13
-    unitType: 0
-    faction: 3
-    rank: 0
-    detectRange: 0
-  - x: 10
-    y: 4
-    unitType: 0
-    faction: 2
-    rank: 0
-    detectRange: 20
+  units:
   - x: 6
     y: 16
     unitType: 5
     faction: 1
     rank: 0
     detectRange: 0
-  - x: 15
-    y: 5
-    unitType: 5
-    faction: 2
-    rank: 0
+  - x: 9
+    y: 13
+    unitType: 0
+    faction: 1
+    rank: 3
     detectRange: 0
-  - x: 14
-    y: 15
-    unitType: 5
-    faction: 3
-    rank: 0
-    detectRange: 0
-  - x: 10
-    y: 10
-    unitType: 5
-    faction: 2
-    rank: 0
+  - x: 8
+    y: 13
+    unitType: 0
+    faction: 1
+    rank: 3
     detectRange: 0
   - x: 10
     y: 13
-    unitType: 5
+    unitType: 0
+    faction: 1
+    rank: 3
+    detectRange: 0
+  - x: 9
+    y: 15
+    unitType: 1
+    faction: 1
+    rank: 3
+    detectRange: 0
+  - x: 8
+    y: 15
+    unitType: 3
     faction: 1
     rank: 0
     detectRange: 0
+  - x: 15
+    y: 5
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 20
+  - x: 14
+    y: 4
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 20
+  - x: 14
+    y: 3
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 20
+  - x: 15
+    y: 4
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 20
+  - x: 15
+    y: 3
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 20
+  - x: 16
+    y: 4
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 20
+  - x: 16
+    y: 5
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 20
   eventTriggers:
   - id: 1
-    conditionType: 0
-    x1: 9
-    y1: 8
-    x2: 11
-    y2: 9
-    turnNumber: 0
-    fireOnce: 1
-    actions:
-    - actionType: 0
-      text: check 1
-      unitType: 0
-      faction: 0
-      spawnX: 0
-      spawnY: 0
-      spawnRank: 0
-    - actionType: 1
-      text: 
-      unitType: 0
-      faction: 2
-      spawnX: 11
-      spawnY: 5
-      spawnRank: 0
-  - id: 2
-    conditionType: 2
+    conditionType: 3
     x1: 0
     y1: 0
     x2: 0
@@ -211,7 +136,12 @@ MonoBehaviour:
     fireOnce: 1
     actions:
     - actionType: 0
-      text: "\uC2DC\uC791"
+      speakerName: "\uCE74\uB97C"
+      dialogueLines:
+      - "\uAD6D\uACBD\uC5D0 \uC57D\uD0C8\uC790\uB4E4\uC774 \uBAB0\uB824\uC654\uB2E4
+        \uADF8\uB4E4\uC744 \uACA9\uD1F4\uD558\uB77C!"
+      text: "\uAD6D\uACBD\uC5D0 \uC57D\uD0C8\uC790\uB4E4\uC774 \uBAB0\uB824\uC654\uB2E4
+        \uADF8\uB4E4\uC744 \uACA9\uD1F4\uD558\uB77C!"
       unitType: 0
       faction: 0
       spawnX: 0

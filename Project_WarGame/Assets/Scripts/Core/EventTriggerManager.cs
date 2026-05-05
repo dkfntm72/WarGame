@@ -48,6 +48,32 @@ public class EventTriggerManager : MonoBehaviour
         }
     }
 
+    // Called from GameManager after map fully loaded
+    public void OnStageStart()
+    {
+        foreach (var trigger in _triggers)
+        {
+            if (trigger.conditionType != EventConditionType.OnStageStart) continue;
+            if (trigger.fireOnce && _firedOnce.Contains(trigger.id)) continue;
+            StartCoroutine(ExecuteTrigger(trigger));
+        }
+    }
+
+    // Called from GameManager.CaptureBuilding
+    public void OnBuildingCaptured(Building building, Faction newFaction)
+    {
+        int bx = building.tile.X;
+        int by = building.tile.Y;
+        foreach (var trigger in _triggers)
+        {
+            if (trigger.conditionType != EventConditionType.OnBuildingCapture) continue;
+            if (trigger.x1 != bx || trigger.y1 != by) continue;
+            if (trigger.captureByFaction != Faction.Neutral && trigger.captureByFaction != newFaction) continue;
+            if (trigger.fireOnce && _firedOnce.Contains(trigger.id)) continue;
+            StartCoroutine(ExecuteTrigger(trigger));
+        }
+    }
+
     // Called from TurnManager.StartEnemyTurn
     public void OnEnemyTurnStart(int turnNumber)
     {
@@ -77,7 +103,10 @@ public class EventTriggerManager : MonoBehaviour
             case TriggerActionType.ShowText:
             {
                 bool confirmed = false;
-                GameUI.Instance.ShowEventText(action.text, () => confirmed = true);
+                string[] lines = (action.dialogueLines != null && action.dialogueLines.Length > 0)
+                    ? action.dialogueLines
+                    : new[] { action.text ?? "" };
+                GameUI.Instance.ShowDialogue(lines, action.speakerName, () => confirmed = true);
                 yield return new WaitUntil(() => confirmed);
                 break;
             }

@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using UnityEngine.EventSystems;
 using TMPro;
 
 public class StageSelectUI : MonoBehaviour
@@ -24,8 +23,12 @@ public class StageSelectUI : MonoBehaviour
     public Button startButton;
     public Button backButton;
 
-    // 현재 구현된 스테이지만 활성화 (나머지는 잠금 처리)
-    private static readonly string[] SceneNames = { "Stage01", null, null, null, null };
+    // stageDatas[i] != null 이면 활성화, 씬 이름은 인덱스로 자동 생성 (Stage01, Stage02 …)
+    private string SceneNameAt(int i)
+    {
+        if (stageDatas == null || i >= stageDatas.Length || stageDatas[i] == null) return null;
+        return $"Stage{(i + 1):D2}";
+    }
 
     private int _selectedIndex = -1;
     private GameObject[] _selectionIndicators;
@@ -82,15 +85,14 @@ public class StageSelectUI : MonoBehaviour
         for (int i = 0; i < stageButtons.Length; i++)
         {
             int idx = i;
-            if (SceneNames[idx] != null)
+            if (SceneNameAt(idx) != null)
             {
                 stageButtons[idx].onClick.AddListener(() => SelectStage(idx));
-                AddHoverListener(stageButtons[idx], idx);
 
                 // 호버/선택 색 변화 없애기
                 DisableHoverColor(stageButtons[idx]);
 
-                if (PlayerPrefs.GetInt("Cleared_" + SceneNames[idx], 0) == 1)
+                if (PlayerPrefs.GetInt("Cleared_" + SceneNameAt(idx), 0) == 1)
                     ShowClearBadge(stageButtons[idx]);
             }
             else
@@ -160,17 +162,7 @@ public class StageSelectUI : MonoBehaviour
 
         ShowStageDescription(idx);
 
-        SetStartButtonDim(SceneNames[idx] == null);
-    }
-
-    private void AddHoverListener(Button button, int idx)
-    {
-        var trigger = button.gameObject.GetComponent<UnityEngine.EventSystems.EventTrigger>();
-        if (trigger == null) trigger = button.gameObject.AddComponent<UnityEngine.EventSystems.EventTrigger>();
-
-        var entry = new UnityEngine.EventSystems.EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
-        entry.callback.AddListener(_ => ShowStageDescription(idx));
-        trigger.triggers.Add(entry);
+        SetStartButtonDim(SceneNameAt(idx) == null);
     }
 
     private void ShowStageDescription(int idx)
@@ -213,9 +205,10 @@ public class StageSelectUI : MonoBehaviour
 
     private void OnStartClicked()
     {
-        if (_selectedIndex < 0 || _selectedIndex >= SceneNames.Length) return;
-        if (SceneNames[_selectedIndex] == null) return;
-        SceneManager.LoadScene(SceneNames[_selectedIndex]);
+        if (_selectedIndex < 0) return;
+        var sceneName = SceneNameAt(_selectedIndex);
+        if (sceneName == null) return;
+        SceneManager.LoadScene(sceneName);
     }
 
     private void OnBackClicked()

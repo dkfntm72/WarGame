@@ -115,7 +115,7 @@ public class MapEditorWindow : EditorWindow
 
         if (mapData != null)
         {
-            EditorGUILayout.LabelField($"Map: {mapData.scenarioName}  ({mapData.width}x{mapData.height})", EditorStyles.miniLabel);
+            EditorGUILayout.LabelField($"Map: {mapData.stageTitle}  ({mapData.width}x{mapData.height})", EditorStyles.miniLabel);
             GUILayout.Space(8);
 
             GUILayout.Label("W", GUILayout.Width(14));
@@ -213,10 +213,12 @@ public class MapEditorWindow : EditorWindow
         {
             var cond = tr.conditionType switch
             {
-                EventConditionType.OnTileEnter      => $"TileEnter ({tr.x1},{tr.y1})-({tr.x2},{tr.y2})",
-                EventConditionType.OnTurnStart      => $"플레이어 턴 {tr.turnNumber} 시작",
-                EventConditionType.OnEnemyTurnStart => $"적 턴 {tr.turnNumber} 시작",
-                _                                   => tr.conditionType.ToString()
+                EventConditionType.OnTileEnter       => $"TileEnter ({tr.x1},{tr.y1})-({tr.x2},{tr.y2})",
+                EventConditionType.OnTurnStart       => $"플레이어 턴 {tr.turnNumber} 시작",
+                EventConditionType.OnEnemyTurnStart  => $"적 턴 {tr.turnNumber} 시작",
+                EventConditionType.OnStageStart      => "스테이지 시작",
+                EventConditionType.OnBuildingCapture => $"건물 점령 ({tr.x1},{tr.y1}) [{tr.captureByFaction}]",
+                _                                    => tr.conditionType.ToString()
             };
             using var row = new EditorGUILayout.HorizontalScope();
             bool isSelected = _editingTrigger == tr;
@@ -289,6 +291,39 @@ public class MapEditorWindow : EditorWindow
                     $"{label} {_editingTrigger.turnNumber} 시작 시 발동합니다.",
                     MessageType.None);
             }
+            else if (_editingTrigger.conditionType == EventConditionType.OnStageStart)
+            {
+                EditorGUILayout.HelpBox(
+                    "맵 로드가 완료된 직후, 첫 번째 턴이 시작되기 전에 발동합니다.",
+                    MessageType.None);
+            }
+            else if (_editingTrigger.conditionType == EventConditionType.OnBuildingCapture)
+            {
+                EditorGUILayout.LabelField($"건물 위치  ({_editingTrigger.x1},{_editingTrigger.y1})");
+                using (var row = new EditorGUILayout.HorizontalScope())
+                {
+                    var oldColor = GUI.color;
+                    GUI.color = _placingTile ? Color.yellow : oldColor;
+                    if (GUILayout.Button(_placingTile ? "▶ 타일 클릭..." : "건물 타일 지정", EditorStyles.miniButton))
+                    {
+                        _placingTile    = !_placingTile;
+                        _placingTileEnd = false;
+                    }
+                    GUI.color = oldColor;
+                }
+
+                var newFac = (Faction)EditorGUILayout.EnumPopup("점령 팩션", _editingTrigger.captureByFaction);
+                if (newFac != _editingTrigger.captureByFaction)
+                {
+                    _editingTrigger.captureByFaction = newFac;
+                    if (mapData != null) mapData.eventTriggers = triggers.ToArray();
+                }
+                EditorGUILayout.HelpBox(
+                    _editingTrigger.captureByFaction == Faction.Neutral
+                        ? "어떤 팩션이 점령해도 발동합니다."
+                        : $"{_editingTrigger.captureByFaction} 팩션이 해당 건물을 점령할 때 발동합니다.",
+                    MessageType.None);
+            }
 
             var newOnce = EditorGUILayout.Toggle("Fire Once", _editingTrigger.fireOnce);
             if (newOnce != _editingTrigger.fireOnce)
@@ -307,28 +342,68 @@ public class MapEditorWindow : EditorWindow
             for (int i = 0; i < actionList.Count; i++)
             {
                 var action = actionList[i];
-                using var row = new EditorGUILayout.HorizontalScope(EditorStyles.helpBox);
+                using var box = new EditorGUILayout.VerticalScope(EditorStyles.helpBox);
 
-                action.actionType = (TriggerActionType)EditorGUILayout.EnumPopup(action.actionType, GUILayout.Width(90));
+                // ── 헤더: 액션 타입 + 삭제 ──
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    action.actionType = (TriggerActionType)EditorGUILayout.EnumPopup(action.actionType, GUILayout.Width(90));
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button("X", EditorStyles.miniButton, GUILayout.Width(18)))
+                        actionToDelete = action;
+                }
 
                 if (action.actionType == TriggerActionType.ShowText)
                 {
-                    action.text = EditorGUILayout.TextField(action.text);
+                    // 화자 이름
+                    action.speakerName = EditorGUILayout.TextField("화자", action.speakerName ?? "");
+
+                    // 대사 목록
+                    EditorGUILayout.LabelField("대사 목록 (클릭할 때마다 한 줄씩 진행)", EditorStyles.miniLabel);
+                    var lineList = (action.dialogueLines != null && action.dialogueLines.Length > 0)
+                        ? new System.Collections.Generic.List<string>(action.dialogueLines)
+                        : new System.Collections.Generic.List<string>();
+
+                    // 레거시 text → dialogueLines 자동 마이그레이션
+                    if (lineList.Count == 0 && !string.IsNullOrEmpty(action.text))
+                        lineList.Add(action.text);
+
+                    int removeLineIdx = -1;
+                    for (int l = 0; l < lineList.Count; l++)
+                    {
+                        using (new EditorGUILayout.HorizontalScope())
+                        {
+                            EditorGUILayout.LabelField($"{l + 1}.", GUILayout.Width(20));
+                            lineList[l] = EditorGUILayout.TextField(lineList[l]);
+                            if (GUILayout.Button("−", EditorStyles.miniButton, GUILayout.Width(20)))
+                                removeLineIdx = l;
+                        }
+                    }
+                    if (removeLineIdx >= 0) { lineList.RemoveAt(removeLineIdx); actionsChanged = true; }
+
+                    if (GUILayout.Button("+ 대사 추가", EditorStyles.miniButton, GUILayout.Width(90)))
+                    {
+                        lineList.Add("");
+                        actionsChanged = true;
+                    }
+
+                    action.dialogueLines = lineList.ToArray();
+                    action.text          = lineList.Count > 0 ? lineList[0] : "";
                 }
                 else // SpawnUnit
                 {
-                    action.unitType  = (UnitType)EditorGUILayout.EnumPopup(action.unitType, GUILayout.Width(70));
-                    action.faction   = (Faction)EditorGUILayout.EnumPopup(action.faction, GUILayout.Width(60));
-                    GUILayout.Label("X", GUILayout.Width(12));
-                    action.spawnX    = EditorGUILayout.IntField(action.spawnX, GUILayout.Width(28));
-                    GUILayout.Label("Y", GUILayout.Width(12));
-                    action.spawnY    = EditorGUILayout.IntField(action.spawnY, GUILayout.Width(28));
-                    GUILayout.Label("Rank", GUILayout.Width(32));
-                    action.spawnRank = EditorGUILayout.IntSlider(action.spawnRank, 0, 5, GUILayout.Width(90));
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        action.unitType  = (UnitType)EditorGUILayout.EnumPopup(action.unitType, GUILayout.Width(70));
+                        action.faction   = (Faction)EditorGUILayout.EnumPopup(action.faction, GUILayout.Width(60));
+                        GUILayout.Label("X", GUILayout.Width(12));
+                        action.spawnX    = EditorGUILayout.IntField(action.spawnX, GUILayout.Width(28));
+                        GUILayout.Label("Y", GUILayout.Width(12));
+                        action.spawnY    = EditorGUILayout.IntField(action.spawnY, GUILayout.Width(28));
+                        GUILayout.Label("Rank", GUILayout.Width(32));
+                        action.spawnRank = EditorGUILayout.IntSlider(action.spawnRank, 0, 5, GUILayout.Width(90));
+                    }
                 }
-
-                if (GUILayout.Button("X", EditorStyles.miniButton, GUILayout.Width(18)))
-                    actionToDelete = action;
             }
             actionsChanged |= EditorGUI.EndChangeCheck();
 
@@ -527,9 +602,20 @@ public class MapEditorWindow : EditorWindow
             EditorGUI.DrawRect(r, isSelected
                 ? new Color(1f, 0.7f, 0f, 0.55f)
                 : new Color(1f, 0.5f, 0f, 0.30f));
-            // ID 텍스트는 범위 시작 코너(x1,y1)에만 표시
             if (x == triggerOnCell.x1 && y == triggerOnCell.y1)
                 EditorGUI.LabelField(r, $"T{triggerOnCell.id}", UnitLabelStyle);
+        }
+
+        // Trigger fill (BuildingCapture type)
+        var captureTrigger = triggers.Find(t =>
+            t.conditionType == EventConditionType.OnBuildingCapture && t.x1 == x && t.y1 == y);
+        if (captureTrigger != null)
+        {
+            bool isSelected = captureTrigger == _editingTrigger;
+            EditorGUI.DrawRect(r, isSelected
+                ? new Color(0.2f, 0.8f, 1f, 0.60f)
+                : new Color(0.2f, 0.6f, 1f, 0.35f));
+            EditorGUI.LabelField(r, $"C{captureTrigger.id}", UnitLabelStyle);
         }
 
         // Coordinates (small)
@@ -602,11 +688,25 @@ public class MapEditorWindow : EditorWindow
                         break;
                     }
                 }
+                if (_editingTrigger != null && _editingTrigger.conditionType == EventConditionType.OnBuildingCapture)
+                {
+                    if (_placingTile)
+                    {
+                        _editingTrigger.x1 = x; _editingTrigger.y1 = y;
+                        _editingTrigger.x2 = x; _editingTrigger.y2 = y;
+                        _placingTile = false;
+                        mapData.eventTriggers = triggers.ToArray();
+                        break;
+                    }
+                }
                 {
                     // Click on existing trigger tile to select it
                     var existing = triggers.Find(t =>
                         t.conditionType == EventConditionType.OnTileEnter && t.ContainsTile(x, y));
-                    if (existing != null) _editingTrigger = existing;
+                    if (existing != null) { _editingTrigger = existing; break; }
+                    var existingCapture = triggers.Find(t =>
+                        t.conditionType == EventConditionType.OnBuildingCapture && t.x1 == x && t.y1 == y);
+                    if (existingCapture != null) _editingTrigger = existingCapture;
                 }
                 break;
         }
@@ -666,7 +766,7 @@ public class MapEditorWindow : EditorWindow
         mapData.eventTriggers = triggers.ToArray();
         EditorUtility.SetDirty(mapData);
         AssetDatabase.SaveAssets();
-        Debug.Log($"[MapEditor] '{mapData.scenarioName}' saved ({mapData.width}x{mapData.height})");
+        Debug.Log($"[MapEditor] '{mapData.stageTitle}' saved ({mapData.width}x{mapData.height})");
     }
 
     private void ApplyToScene()

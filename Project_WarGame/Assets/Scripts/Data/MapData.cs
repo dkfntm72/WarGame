@@ -10,13 +10,12 @@ public class MapData : ScriptableObject
     [TextArea(2, 5)]
     public string stageOverview;
 
-    [Header("시나리오")]
+    [Header("승패 조건")]
+    [TextArea(3, 10)]
+    public string winLossDescription;
+
     public int width = 10;
     public int height = 8;
-    public string scenarioName = "New Scenario";
-
-    [TextArea(3, 10)]
-    public string scenarioStory;
 
     [Header("초기 자원")]
     public int playerStartGold = 100;
@@ -56,7 +55,10 @@ public class MapData : ScriptableObject
 public class TriggerAction
 {
     public TriggerActionType actionType;
-    // ShowText
+    // ShowText — 대화 모드
+    public string   speakerName;   // 화자 이름 (비워두면 숨김)
+    public string[] dialogueLines; // 연속 대사 배열 (클릭할 때마다 한 줄씩 진행)
+    // ShowText — 레거시 단일 텍스트 (dialogueLines가 비어있을 때 폴백)
     public string text;
     // SpawnUnit
     public UnitType unitType;
@@ -75,6 +77,8 @@ public class EventTrigger
     public int x2, y2; // 범위 끝 (우상단)
     // OnTurnStart
     public int turnNumber;
+    // OnBuildingCapture — 건물 위치는 x1,y1 사용. Neutral = 어떤 팩션이든 상관없음
+    public Faction captureByFaction = Faction.Player;
     // common
     public bool           fireOnce = true;
     public TriggerAction[] actions = new TriggerAction[0];

@@ -149,6 +149,20 @@ public class GridManager : MonoBehaviour
         return result;
     }
 
+    /// <summary>
+    /// 근접(attackRange=1) 유닛의 층 간 공격 차단.
+    /// Grass ↔ Grass2 직접 공격 불가, Slope는 양쪽 모두 허용.
+    /// attackRange > 1 (원거리) 유닛은 항상 true 반환.
+    /// </summary>
+    public static bool CanAttackBetween(TileNode from, TileNode to, int attackRange)
+    {
+        if (attackRange > 1) return true;
+        if (from.TerrainType == TerrainType.Slope || to.TerrainType == TerrainType.Slope) return true;
+        bool fromHigh = from.TerrainType == TerrainType.Grass2;
+        bool toHigh   = to.TerrainType   == TerrainType.Grass2;
+        return fromHigh == toHigh;
+    }
+
     // Grass2는 Slope 위칸(좌우 방향)을 통해서만 진입/이탈 가능
     // 위칸 정의: 해당 Slope의 y+1이 Slope가 아닌 칸
     public static bool CanTransition(TileNode from, TileNode to)

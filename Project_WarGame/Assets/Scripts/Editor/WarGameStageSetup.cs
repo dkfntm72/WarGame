@@ -276,9 +276,8 @@ public static class WarGameStageSetup
         const string path = "Assets/GameData/Maps/Stage01.asset";
         var map = GetOrCreate<MapData>(path);
 
-        map.scenarioName    = "제1장: 국경의 전투";
-        map.scenarioStory   = "적군이 국경을 넘었다. 성을 지키고 적의 성을 점령하라!\n\n" +
-                              "힌트: 중앙 강을 우회해 적의 측면을 노려라.";
+        map.winLossDescription = "적군이 국경을 넘었다. 성을 지키고 적의 성을 점령하라!\n\n" +
+                                  "힌트: 중앙 강을 우회해 적의 측면을 노려라.";
         map.width           = 10;
         map.height          = 8;
         map.playerStartGold = 100;

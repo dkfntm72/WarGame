@@ -157,10 +157,17 @@ MonoBehaviour:
   - {fileID: 634806030}
   - {fileID: 285749566}
   - {fileID: 938521225}
-  stageDatas: []
-  stageTitleText: {fileID: 0}
-  stageOverviewText: {fileID: 0}
-  startButton: {fileID: 0}
+  selectionCorners:
+  - {fileID: 6574313578489692094, guid: 148e1ab80b2b14ce5858df57aeae24e0, type: 3}
+  - {fileID: 7132572721160946631, guid: 148e1ab80b2b14ce5858df57aeae24e0, type: 3}
+  - {fileID: -5929678396764019378, guid: 148e1ab80b2b14ce5858df57aeae24e0, type: 3}
+  - {fileID: 9109851116447529100, guid: 148e1ab80b2b14ce5858df57aeae24e0, type: 3}
+  stageDatas:
+  - {fileID: 11400000, guid: 556b808df40ccfa44b934bf269aeb2f0, type: 2}
+  - {fileID: 11400000, guid: a1b2c3d4e5f6789012345678abcdef01, type: 2}
+  stageTitleText: {fileID: 1381009793}
+  stageOverviewText: {fileID: 908503745}
+  startButton: {fileID: 437202648}
   backButton: {fileID: 2081046101}
 --- !u!114 &174723410
 MonoBehaviour:
@@ -725,7 +732,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 0}
+  m_TargetGraphic: {fileID: 437202646}
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
@@ -1758,7 +1765,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uB0B4\uC6A9"
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: aaf35e50d123c52468fc48bb9af0c4c5, type: 2}
   m_sharedMaterial: {fileID: 6190250041397948884, guid: aaf35e50d123c52468fc48bb9af0c4c5, type: 2}
@@ -2394,7 +2401,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -2508,7 +2515,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC2A4\uD14C\uC774\uC9C0 \uC81C\uBAA9"
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: aaf35e50d123c52468fc48bb9af0c4c5, type: 2}
   m_sharedMaterial: {fileID: 6190250041397948884, guid: aaf35e50d123c52468fc48bb9af0c4c5, type: 2}
