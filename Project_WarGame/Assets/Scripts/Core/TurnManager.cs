@@ -79,7 +79,6 @@ public class TurnManager : MonoBehaviour
         OnEnemyTurnStart?.Invoke();
         EventTriggerManager.Instance?.OnEnemyTurnStart(TurnNumber);
 
-        // Trigger AI
         if (EnemyAI.Instance != null)
             EnemyAI.Instance.StartCoroutine(EnemyAI.Instance.ExecuteTurn());
     }

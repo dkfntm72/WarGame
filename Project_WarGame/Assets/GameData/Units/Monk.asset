@@ -14,12 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   unitType: 3
   unitName: Healer
+  isElite: 0
   maxHp: 40
   attack: 10
   defense: 0
   moveRange: 2
   attackRange: 2
+  detectRange: 6
   goldCost: 30
+  attackSound: {fileID: 8300000, guid: 5e622bc6661feed49ac35fdff565288c, type: 3}
   playerAnimController: {fileID: 9100000, guid: 010817759ac3943d8a63d1698ab7d60e, type: 2}
   playerIdleSprite: {fileID: -7385789195546760866, guid: 7ba4178767e424c47b91888898a1fdc4, type: 3}
   enemyAnimController: {fileID: 9100000, guid: 89982da2b368f41848074f38ca2f2e0a, type: 2}

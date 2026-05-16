@@ -53,7 +53,19 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "mcp__coplay-mcp__set_transform",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(ls -la \"D:/WarGame/Project_WarGame/Assets/\"*.unity)",
+      "Bash(ls \"D:/WarGame/Project_WarGame/Assets/\"*.unity)",
+      "Bash(powershell *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\WarGame\\\\Project_WarGame\\\\Assets\\\\Scripts\" -Recurse -Filter \"*.cs\")",
+      "Bash(Select-String -Pattern \"Event|Trigger|Condition\")",
+      "Bash(Select-Object -ExpandProperty Path -Unique)",
+      "PowerShell(Select-String -Path \"D:\\\\WarGame\\\\Project_WarGame\\\\Assets\\\\Scenes\\\\StageSelect.unity\" -Pattern \"m_text:\" | Select-Object -First 30 | ForEach-Object { $_.Line.Trim\\(\\) })",
+      "Bash(Get-ChildItem -Path \"D:\\\\WarGame\\\\Project_WarGame\\\\Assets\\\\Tiny Swords\" -Recurse -Directory)",
+      "Bash(Select-Object FullName)",
+      "Bash(Remove-Item \"D:\\\\WarGame\\\\Project_WarGame\\\\Assets\\\\Editor\\\\ApplyBGMAllStages.cs\")",
+      "Bash(Remove-Item \"D:\\\\WarGame\\\\Project_WarGame\\\\Assets\\\\Editor\\\\ApplyBGMAllStages.cs.meta\" -ErrorAction SilentlyContinue)",
+      "Bash(dir \"Project_WarGame\\\\Assets\\\\GameData\\\\Units\\\\\" /B)"
     ]
   }
 }

@@ -1,0 +1,540 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab7a4779992005e4e8b1898d32c4b2c1, type: 3}
+  m_Name: Stage04
+  m_EditorClassIdentifier: 
+  stageTitle: "\uB300\uACF5\uC138"
+  stageOverview: "\uBD81\uBC29\uC655\uAD6D\uC5D0 \uACF5\uACA9\uC73C\uB85C \uBD80\uD130
+    \uCCA0\uBCBD\uC655\uAD6D\uC744 \uC9C0\uCF1C\uB0C8\uB2E4 \uC774\uC81C \uC57D\uD574\uC9C4
+    \uBD81\uBC29\uC655\uAD6D\uC744 \uB05D\uB0B4\uC57C\uD55C\uB2E4"
+  winLossDescription: 
+  width: 20
+  height: 30
+  playerStartGold: 200
+  enemyStartGold: 100
+  cameraStartEdge: 0
+  victoryCondition: 1
+  terrain: 000000000000000000000000000000000000000000000000000000000300000003000000030000000300000003000000030000000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000300000003000000030000000300000003000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003000000030000000300000003000000030000000300000003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003000000030000000300000003000000030000000300000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000300000003000000030000000300000003000000030000000000000000000000000000000000000000000000000000000300000003000000030000000300000000000000000000000000000000000000030000000300000003000000030000000300000000000000000000000000000000000000000000000300000003000000030000000300000003000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003000000030000000300000003000000030000000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000300000003000000030000000300000003000000000000000000000000000000000000000000000003000000030000000300000000000000000000000000000000000000000000000000000003000000030000000300000003000000000000000000000000000000000000000000000000000000030000000300000003000000030000000300000000000000000000000000000000000000000000000300000003000000030000000300000000000000000000000000000000000000000000000000000003000000030000000300000003000000030000000000000000000000000000000000000000000000030000000300000003000000030000000000000000000000000000000000000000000000000000000300000003000000030000000300000003000000000000000000000000000000000000000000000003000000030000000300000003000000000000000000000000000000000000000000000000000000000000000300000003000000030000000300000003000000000000000000000000000000000000000000000003000000030000000300000000000000000000000000000000000000000000000000000000000000030000000300000003000000030000000300000003000000000000000000000000000000000000000000000003000000030000000000000000000000000000000000000000000000000000000000000000000000030000000300000003000000030000000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003000000030000000300000003000000030000000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000300000003000000030000000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003000000030000000300000003000000030000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000003000000030000000300000000000000000000000000000000000000000000000000000003000000030000000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000003000000030000000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000300000003000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000300000003000000030000000300000003000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000003000000030000000300000003000000030000000300000003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003000000030000000300000003000000030000000300000003000000030000000300000003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000003000000030000000300000003000000030000000300000003000000030000000300000000000000000000000000000000000000000000000000000000000000000000000000000003000000030000000300000003000000030000000300000003000000030000000300000003000000030000000000000000000000000000000000000000000000000000000000000000000000000000000300000003000000030000000300000003000000030000000300000003000000030000000300000003000000000000000000000000000000000000000000000000000000000000000000000000000000030000000300000003000000030000000300000003000000030000000300000003000000030000000300000000000000000000000000000000000000000000000000000000000000000000000000000003000000030000000300000003000000030000000300000003000000030000000300000003000000030000000000000000000000000000000000000000000000000000000000000000000000000000000300000003000000030000000300000003000000
+  buildings:
+  - x: 3
+    y: 11
+    buildingType: 0
+    faction: 2
+  - x: 1
+    y: 12
+    buildingType: 3
+    faction: 2
+  - x: 1
+    y: 10
+    buildingType: 3
+    faction: 2
+  - x: 10
+    y: 27
+    buildingType: 0
+    faction: 2
+  - x: 7
+    y: 28
+    buildingType: 3
+    faction: 2
+  - x: 7
+    y: 26
+    buildingType: 3
+    faction: 2
+  - x: 13
+    y: 28
+    buildingType: 3
+    faction: 2
+  - x: 13
+    y: 26
+    buildingType: 3
+    faction: 2
+  - x: 3
+    y: 13
+    buildingType: 2
+    faction: 2
+  units:
+  - x: 4
+    y: 4
+    unitType: 4
+    faction: 1
+    rank: 5
+    detectRange: 0
+  - x: 5
+    y: 4
+    unitType: 4
+    faction: 1
+    rank: 5
+    detectRange: 0
+  - x: 6
+    y: 3
+    unitType: 4
+    faction: 1
+    rank: 5
+    detectRange: 0
+  - x: 3
+    y: 4
+    unitType: 0
+    faction: 1
+    rank: 5
+    detectRange: 0
+  - x: 7
+    y: 3
+    unitType: 0
+    faction: 1
+    rank: 5
+    detectRange: 0
+  - x: 5
+    y: 3
+    unitType: 1
+    faction: 1
+    rank: 5
+    detectRange: 0
+  - x: 6
+    y: 2
+    unitType: 1
+    faction: 1
+    rank: 3
+    detectRange: 0
+  - x: 2
+    y: 4
+    unitType: 0
+    faction: 1
+    rank: 3
+    detectRange: 0
+  - x: 15
+    y: 4
+    unitType: 0
+    faction: 3
+    rank: 3
+    detectRange: 60
+  - x: 16
+    y: 4
+    unitType: 0
+    faction: 3
+    rank: 3
+    detectRange: 60
+  - x: 15
+    y: 3
+    unitType: 1
+    faction: 3
+    rank: 3
+    detectRange: 60
+  - x: 16
+    y: 3
+    unitType: 1
+    faction: 3
+    rank: 3
+    detectRange: 60
+  - x: 17
+    y: 4
+    unitType: 1
+    faction: 3
+    rank: 3
+    detectRange: 60
+  - x: 3
+    y: 3
+    unitType: 1
+    faction: 1
+    rank: 5
+    detectRange: 0
+  - x: 4
+    y: 3
+    unitType: 1
+    faction: 1
+    rank: 5
+    detectRange: 0
+  - x: 5
+    y: 2
+    unitType: 1
+    faction: 1
+    rank: 5
+    detectRange: 0
+  - x: 13
+    y: 7
+    unitType: 0
+    faction: 2
+    rank: 2
+    detectRange: 60
+  - x: 14
+    y: 8
+    unitType: 0
+    faction: 2
+    rank: 2
+    detectRange: 60
+  - x: 13
+    y: 8
+    unitType: 1
+    faction: 2
+    rank: 0
+    detectRange: 30
+  - x: 12
+    y: 7
+    unitType: 1
+    faction: 2
+    rank: 0
+    detectRange: 30
+  - x: 14
+    y: 9
+    unitType: 1
+    faction: 2
+    rank: 0
+    detectRange: 30
+  - x: 5
+    y: 6
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 30
+  - x: 6
+    y: 6
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 30
+  - x: 5
+    y: 7
+    unitType: 1
+    faction: 2
+    rank: 0
+    detectRange: 30
+  - x: 6
+    y: 7
+    unitType: 1
+    faction: 2
+    rank: 0
+    detectRange: 30
+  - x: 5
+    y: 16
+    unitType: 5
+    faction: 2
+    rank: 0
+    detectRange: 30
+  - x: 13
+    y: 11
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 3
+  - x: 14
+    y: 11
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 3
+  - x: 15
+    y: 10
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 3
+  - x: 15
+    y: 15
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 3
+  - x: 16
+    y: 14
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 3
+  - x: 17
+    y: 14
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 3
+  - x: 17
+    y: 16
+    unitType: 5
+    faction: 2
+    rank: 0
+    detectRange: 3
+  - x: 16
+    y: 16
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 3
+  - x: 18
+    y: 16
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 3
+  - x: 16
+    y: 17
+    unitType: 1
+    faction: 2
+    rank: 0
+    detectRange: 3
+  - x: 17
+    y: 17
+    unitType: 1
+    faction: 2
+    rank: 0
+    detectRange: 3
+  - x: 18
+    y: 17
+    unitType: 1
+    faction: 2
+    rank: 0
+    detectRange: 3
+  - x: 15
+    y: 17
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 3
+  - x: 19
+    y: 16
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 3
+  - x: 14
+    y: 3
+    unitType: 0
+    faction: 3
+    rank: 5
+    detectRange: 60
+  - x: 14
+    y: 4
+    unitType: 0
+    faction: 3
+    rank: 5
+    detectRange: 60
+  - x: 15
+    y: 5
+    unitType: 0
+    faction: 3
+    rank: 5
+    detectRange: 60
+  - x: 16
+    y: 5
+    unitType: 0
+    faction: 3
+    rank: 5
+    detectRange: 60
+  - x: 17
+    y: 5
+    unitType: 0
+    faction: 3
+    rank: 5
+    detectRange: 60
+  - x: 18
+    y: 4
+    unitType: 0
+    faction: 3
+    rank: 5
+    detectRange: 60
+  - x: 15
+    y: 2
+    unitType: 0
+    faction: 3
+    rank: 5
+    detectRange: 60
+  - x: 2
+    y: 10
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 4
+  - x: 3
+    y: 10
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 4
+  - x: 4
+    y: 10
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 4
+  - x: 2
+    y: 11
+    unitType: 1
+    faction: 2
+    rank: 0
+    detectRange: 4
+  - x: 4
+    y: 11
+    unitType: 1
+    faction: 2
+    rank: 0
+    detectRange: 4
+  - x: 4
+    y: 17
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 4
+  - x: 6
+    y: 16
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 4
+  - x: 5
+    y: 17
+    unitType: 1
+    faction: 2
+    rank: 0
+    detectRange: 4
+  - x: 6
+    y: 17
+    unitType: 1
+    faction: 2
+    rank: 0
+    detectRange: 4
+  - x: 3
+    y: 18
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 4
+  - x: 7
+    y: 16
+    unitType: 0
+    faction: 2
+    rank: 0
+    detectRange: 4
+  - x: 9
+    y: 24
+    unitType: 0
+    faction: 2
+    rank: 2
+    detectRange: 4
+  - x: 10
+    y: 24
+    unitType: 0
+    faction: 2
+    rank: 2
+    detectRange: 4
+  - x: 11
+    y: 24
+    unitType: 0
+    faction: 2
+    rank: 2
+    detectRange: 4
+  - x: 12
+    y: 25
+    unitType: 0
+    faction: 2
+    rank: 2
+    detectRange: 4
+  - x: 8
+    y: 25
+    unitType: 0
+    faction: 2
+    rank: 2
+    detectRange: 4
+  - x: 9
+    y: 25
+    unitType: 1
+    faction: 2
+    rank: 2
+    detectRange: 4
+  - x: 10
+    y: 25
+    unitType: 1
+    faction: 2
+    rank: 2
+    detectRange: 4
+  - x: 11
+    y: 25
+    unitType: 1
+    faction: 2
+    rank: 2
+    detectRange: 4
+  eventTriggers:
+  - id: 1
+    conditionType: 3
+    x1: 0
+    y1: 0
+    x2: 0
+    y2: 0
+    turnNumber: 0
+    captureByFaction: 1
+    fireOnce: 1
+    actions:
+    - actionType: 0
+      speakerName: "\uCE74\uB97C"
+      dialogueLines:
+      - "\uC801\uC758 \uB300\uADDC\uBAA8 \uACF5\uACA9\uC744 \uB9C9\uC544\uB0B8 \uC9C0\uAE08\uC774
+        \uBD81\uBC29\uC655\uAD6D\uC744 \uB05D\uB0BC \uAE30\uD68C\uB2E4 \uC804\uAD70
+        \uC9C4\uACA9\uD558\uB77C!"
+      text: "\uC801\uC758 \uB300\uADDC\uBAA8 \uACF5\uACA9\uC744 \uB9C9\uC544\uB0B8
+        \uC9C0\uAE08\uC774 \uBD81\uBC29\uC655\uAD6D\uC744 \uB05D\uB0BC \uAE30\uD68C\uB2E4
+        \uC804\uAD70 \uC9C4\uACA9\uD558\uB77C!"
+      unitType: 0
+      faction: 0
+      spawnX: 0
+      spawnY: 0
+      spawnRank: 0
+    - actionType: 0
+      speakerName: "\uBD80\uAD00 \uBCA0\uB978\uD558\uB974\uD2B8"
+      dialogueLines:
+      - "\uC774\uBC88 \uC804\uD22C\uC5D0\uC11C \uCCA0\uBCBD\uC655\uAD6D\uB3C4 \uC9C0\uC6D0\uAD70\uC744
+        \uBCF4\uB0B4\uC654\uC2B5\uB2C8\uB2E4"
+      - "\uADF8\uB4E4\uC774 \uC6B0\uCE21\uC73C\uB85C \uC9C4\uACA9\uD560 \uAC83\uC785\uB2C8\uB2E4"
+      text: "\uC774\uBC88 \uC804\uD22C\uC5D0\uC11C \uCCA0\uBCBD\uC655\uAD6D\uB3C4
+        \uC9C0\uC6D0\uAD70\uC744 \uBCF4\uB0B4\uC654\uC2B5\uB2C8\uB2E4"
+      unitType: 0
+      faction: 0
+      spawnX: 0
+      spawnY: 0
+      spawnRank: 0
+  - id: 2
+    conditionType: 4
+    x1: 10
+    y1: 27
+    x2: 10
+    y2: 27
+    turnNumber: 0
+    captureByFaction: 1
+    fireOnce: 1
+    actions:
+    - actionType: 0
+      speakerName: "\uCE74\uB97C"
+      dialogueLines:
+      - "\uB05D\uB0AC\uB2E4 \uBD81\uBC29\uC655\uAD6D\uC758 \uAD70\uB300\uB294 \uAD34\uBA78\uB418\uC5C8\uB2E4"
+      text: "\uB05D\uB0AC\uB2E4 \uBD81\uBC29\uC655\uAD6D\uC758 \uAD70\uB300\uB294
+        \uAD34\uBA78\uB418\uC5C8\uB2E4"
+      unitType: 0
+      faction: 0
+      spawnX: 0
+      spawnY: 0
+      spawnRank: 0
+    - actionType: 0
+      speakerName: "\uBD80\uAD00 \uBCA0\uB978\uD558\uB974\uD2B8"
+      dialogueLines:
+      - "\uC774\uC81C \uBD81\uBC29\uC655\uAD6D\uC758 \uC218\uB3C4\uB9CC \uB0A8\uC558\uC2B5\uB2C8\uB2E4"
+      text: "\uC774\uC81C \uBD81\uBC29\uC655\uAD6D\uC758 \uC218\uB3C4\uB9CC \uB0A8\uC558\uC2B5\uB2C8\uB2E4"
+      unitType: 0
+      faction: 0
+      spawnX: 0
+      spawnY: 0
+      spawnRank: 0
+    - actionType: 0
+      speakerName: "\uCE74\uB97C"
+      dialogueLines:
+      - "\uADF8\uB798 \uBC14\uB85C \uC218\uB3C4\uB85C \uC9C4\uAD70\uD574 \uD3EC\uC704\uD558\uB77C"
+      - "\uC774\uC81C \uB05D\uC744\uB0B4\uC790"
+      text: "\uADF8\uB798 \uBC14\uB85C \uC218\uB3C4\uB85C \uC9C4\uAD70\uD574 \uD3EC\uC704\uD558\uB77C"
+      unitType: 0
+      faction: 0
+      spawnX: 0
+      spawnY: 0
+      spawnRank: 0

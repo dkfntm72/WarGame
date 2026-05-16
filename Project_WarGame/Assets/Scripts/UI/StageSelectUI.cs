@@ -85,6 +85,7 @@ public class StageSelectUI : MonoBehaviour
         for (int i = 0; i < stageButtons.Length; i++)
         {
             int idx = i;
+
             if (SceneNameAt(idx) != null)
             {
                 stageButtons[idx].onClick.AddListener(() => SelectStage(idx));

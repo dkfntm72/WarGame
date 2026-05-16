@@ -40,6 +40,7 @@ public class Unit : MonoBehaviour
     private RankBar        rankBar;
     private Animator       _overlayAnim; // 타워 위 궁수 오버레이
     private SpriteRenderer _overlaySr;
+    private AudioSource    _audio;
 
     private static GameObject damageNumberPrefab;
 
@@ -55,6 +56,9 @@ public class Unit : MonoBehaviour
         anim      = GetComponent<Animator>();
         healthBar = GetComponent<HealthBar>();
         rankBar   = GetComponent<RankBar>();
+        _audio    = gameObject.AddComponent<AudioSource>();
+        _audio.playOnAwake = false;
+        _audio.spatialBlend = 0f;
 
         // sortingOrder 고정 (타일맵 0·3보다 위, Z값으로 유닛 간 순서 결정)
         if (sr != null) sr.sortingOrder = 5;
@@ -159,6 +163,7 @@ public class Unit : MonoBehaviour
         HasMoved = true;
         anim?.SetTrigger("Attack");
         _overlayAnim?.SetTrigger("Attack");
+        if (data.attackSound != null) _audio.PlayOneShot(data.attackSound, 0.5f);
         yield return new WaitForSeconds(0.4f);
 
         int baseAtk = data.unitType == UnitType.Monk
@@ -194,6 +199,7 @@ public class Unit : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
         anim?.SetTrigger("Attack");
         _overlayAnim?.SetTrigger("Attack");
+        if (data.attackSound != null) _audio.PlayOneShot(data.attackSound, 0.5f);
         yield return new WaitForSeconds(0.3f);
 
         int counterDmg = Mathf.Max(0,
@@ -207,6 +213,7 @@ public class Unit : MonoBehaviour
         HasActed = true;
         HasMoved = true;
         anim?.SetTrigger("Attack");
+        if (data.attackSound != null) _audio.PlayOneShot(data.attackSound, 0.5f);
         yield return new WaitForSeconds(0.4f);
         target.Heal(EffectiveAttack);
         RefreshColor();

@@ -8,20 +8,31 @@ public class MainMenuUI : MonoBehaviour
     public Button startButton;
     public Button settingsButton;
 
+    [Header("Settings Panel")]
+    public GameObject settingsPanel;
+    public Button     quitButton;
+
     private void Start()
     {
         startButton.onClick.AddListener(OnStartClicked);
         settingsButton.onClick.AddListener(OnSettingsClicked);
+
+        settingsPanel?.SetActive(false);
+        quitButton?.onClick.AddListener(QuitGame);
+
+        var overlay = settingsPanel?.transform.Find("Overlay")?.GetComponent<Button>();
+        overlay?.onClick.AddListener(CloseSettings);
     }
 
-    private void OnStartClicked()
-    {
-        SceneManager.LoadScene("StageSelect");
-    }
+    private void OnStartClicked()  => SceneManager.LoadScene("StageSelect");
+    private void OnSettingsClicked() => settingsPanel?.SetActive(true);
+    private void CloseSettings()    => settingsPanel?.SetActive(false);
 
-    private void OnSettingsClicked()
+    private void QuitGame()
     {
-        // TODO: 설정 패널 열기
-        Debug.Log("[MainMenu] 설정 버튼 클릭");
+        Application.Quit();
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#endif
     }
 }

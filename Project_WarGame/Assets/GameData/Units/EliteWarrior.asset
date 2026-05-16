@@ -11,18 +11,21 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 038b04b8560b8c3488282c2401c92083, type: 3}
   m_Name: EliteWarrior
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   unitType: 4
   unitName: "\uC815\uC608 \uC804\uC0AC"
   isElite: 1
   maxHp: 150
-  attack: 23
+  attack: 25
   defense: 8
   moveRange: 4
   attackRange: 1
   detectRange: 6
   goldCost: 0
+  attackSound: {fileID: 8300000, guid: c7bdb7ce702dcff41a3b4ad2e6641de5, type: 3}
   playerAnimController: {fileID: 9100000, guid: f3c1a2b4d5e678901234567890abcd12, type: 2}
   playerIdleSprite: {fileID: 7384290322352760091, guid: 728135fe2ac4b434ab56e445d647d2a0, type: 3}
   enemyAnimController: {fileID: 0}
   enemyIdleSprite: {fileID: 0}
+  allyAnimController: {fileID: 0}
+  allyIdleSprite: {fileID: 0}

@@ -487,7 +487,7 @@ public class MapEditorWindow : EditorWindow
         {
             using var row = new EditorGUILayout.HorizontalScope();
             GUILayout.Label("감지범위:", GUILayout.Width(60));
-            selectedDetectRange = EditorGUILayout.IntSlider(selectedDetectRange, 0, 20, GUILayout.Width(200));
+            selectedDetectRange = EditorGUILayout.IntSlider(selectedDetectRange, 0, 60, GUILayout.Width(200));
             string hint = selectedDetectRange == 0 ? " (UnitData 기본값)" : $" ({selectedDetectRange} 칸)";
             EditorGUILayout.LabelField(hint, EditorStyles.miniLabel);
         }
@@ -1207,8 +1207,8 @@ public class MapEditorWindow : EditorWindow
 
     private void ResizeMap(int newW, int newH)
     {
-        newW = Mathf.Clamp(newW, 4, 30);
-        newH = Mathf.Clamp(newH, 4, 20);
+        newW = Mathf.Clamp(newW, 4, 100);
+        newH = Mathf.Clamp(newH, 4, 100);
 
         var newTerrain = new TerrainType[newW * newH];
         for (int y = 0; y < newH; y++)
@@ -1224,7 +1224,13 @@ public class MapEditorWindow : EditorWindow
         units.RemoveAll(u => u.x >= newW || u.y >= newH);
         triggers.RemoveAll(t => t.conditionType == EventConditionType.OnTileEnter && (t.x1 >= newW || t.y1 >= newH));
 
+        mapData.buildings     = buildings.ToArray();
+        mapData.units         = units.ToArray();
+        mapData.eventTriggers = triggers.ToArray();
+
         EditorUtility.SetDirty(mapData);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"[MapEditor] Resized to {newW}x{newH}");
     }
 
     // ── Visuals ───────────────────────────────────────────────

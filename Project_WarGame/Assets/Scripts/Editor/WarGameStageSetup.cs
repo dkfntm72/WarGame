@@ -1,7 +1,9 @@
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine.Tilemaps;
+using TMPro;
 using System.Linq;
 
 /// <summary>
@@ -13,6 +15,128 @@ public static class WarGameStageSetup
     private const string UnitRoot     = "Assets/Tiny Swords/Units/";
     private const string BuildingRoot = "Assets/Tiny Swords/Buildings/";
     private const string TileRoot     = "Assets/Tiny Swords/Terrain/Tileset/Tilemap Settings/Sliced Tiles/";
+
+    [MenuItem("Window/WarGame/Add Ad Button (Current Scene)")]
+    public static void AddAdButtonCurrentScene()
+    {
+        if (!PatchAdButton()) return;
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        Debug.Log("[WarGame] 현재 씬에 광고 버튼 추가 완료!");
+    }
+
+    [MenuItem("Window/WarGame/Add Ad Button (All Stages)")]
+    public static void AddAdButtonAllStages()
+    {
+        var scenePaths = new[]
+        {
+            "Assets/Scenes/Stage01.unity",
+            "Assets/Scenes/Stage02.unity",
+            "Assets/Scenes/Stage03.unity",
+            "Assets/Scenes/Stage04.unity",
+            "Assets/Scenes/Stage05.unity",
+        };
+
+        foreach (var path in scenePaths)
+        {
+            if (!System.IO.File.Exists(path)) continue;
+            var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+            if (PatchAdButton())
+            {
+                EditorSceneManager.SaveScene(scene, path);
+                Debug.Log($"[WarGame] 광고 버튼 추가: {path}");
+            }
+        }
+        Debug.Log("[WarGame] 모든 스테이지 광고 버튼 추가 완료!");
+    }
+
+    static bool PatchAdButton()
+    {
+        var canvasGO = GameObject.Find("UI");
+        if (canvasGO == null) { Debug.LogError("[WarGame] 'UI' 캔버스를 찾을 수 없습니다."); return false; }
+
+        var gameUI = canvasGO.GetComponent<GameUI>();
+        if (gameUI == null) { Debug.LogError("[WarGame] GameUI 컴포넌트를 찾을 수 없습니다."); return false; }
+
+        if (canvasGO.transform.Find("AdButton") != null)
+        {
+            Debug.Log("[WarGame] AdButton이 이미 있습니다 — 스킵");
+            return false;
+        }
+
+        if (canvasGO.GetComponent<AdManager>() == null)
+            canvasGO.AddComponent<AdManager>();
+
+        var fontAsset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Fonts/경기천년제목OTF_Bold SDF.asset");
+        Sprite btnSprite = null;
+        foreach (var s in AssetDatabase.LoadAllAssetsAtPath(
+            "Assets/Tiny Swords/UI Elements/Buttons/SmallBlueSquareButton_Regular.png"))
+        {
+            if (s is Sprite sp && sp.name == "SmallBlueSquareButton_Regular_0") { btnSprite = sp; break; }
+        }
+
+        // SpeedButton 기준 왼쪽에 배치
+        var speedBtnGO = canvasGO.transform.Find("SpeedButton");
+        Vector2 adBtnPos = speedBtnGO != null
+            ? speedBtnGO.GetComponent<RectTransform>().anchoredPosition + new Vector2(-160, 0)
+            : new Vector2(-480, 80);
+
+        var adGO = new GameObject("AdButton");
+        adGO.transform.SetParent(canvasGO.transform, false);
+        var rt = adGO.AddComponent<RectTransform>();
+        rt.anchorMin        = new Vector2(1, 0);
+        rt.anchorMax        = new Vector2(1, 0);
+        rt.pivot            = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = adBtnPos;
+        rt.sizeDelta        = new Vector2(150, 60);
+
+        var img = adGO.AddComponent<Image>();
+        if (btnSprite != null) { img.sprite = btnSprite; img.type = Image.Type.Sliced; img.color = Color.white; }
+        else img.color = new Color(0.2f, 0.5f, 0.2f);
+        adGO.AddComponent<Button>();
+
+        var lbl = new GameObject("Label");
+        lbl.transform.SetParent(adGO.transform, false);
+        var lrt = lbl.AddComponent<RectTransform>();
+        lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one; lrt.sizeDelta = Vector2.zero;
+        var tmp = lbl.AddComponent<TextMeshProUGUI>();
+        tmp.text      = "광고 (3)";
+        tmp.fontSize  = 22;
+        tmp.color     = Color.white;
+        tmp.alignment = TextAlignmentOptions.Center;
+        if (fontAsset != null) tmp.font = fontAsset;
+
+        var outlineMat = AssetDatabase.LoadAssetAtPath<Material>(
+            "Assets/Fonts/경기천년제목OTF_Bold SDF - Outline.mat");
+        if (outlineMat != null) tmp.fontSharedMaterial = outlineMat;
+
+        gameUI.adButton = adGO.GetComponent<Button>();
+        EditorUtility.SetDirty(gameUI);
+        return true;
+    }
+
+    [MenuItem("Window/WarGame/Rebuild UI (All Stages)")]
+    public static void RebuildAllUI()
+    {
+        var scenePaths = new[]
+        {
+            "Assets/Scenes/Stage01.unity",
+            "Assets/Scenes/Stage02.unity",
+            "Assets/Scenes/Stage03.unity",
+            "Assets/Scenes/Stage04.unity",
+        };
+
+        foreach (var path in scenePaths)
+        {
+            if (!System.IO.File.Exists(path)) continue;
+
+            var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+            BuildGameUI.Execute();
+            EditorSceneManager.SaveScene(scene, path);
+            Debug.Log($"[WarGame] UI 재빌드 완료: {path}");
+        }
+
+        Debug.Log("[WarGame] 모든 스테이지 UI 재빌드 완료!");
+    }
 
     [MenuItem("Window/WarGame/Setup Stage01")]
     public static void Run()

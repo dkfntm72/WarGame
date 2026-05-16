@@ -14,6 +14,9 @@ public class UnitData : ScriptableObject
     public int detectRange = 6;
     public int goldCost = 50;
 
+    [Header("Sound")]
+    public AudioClip attackSound;
+
     [Header("Player Faction")]
     public RuntimeAnimatorController playerAnimController;
     public Sprite playerIdleSprite;

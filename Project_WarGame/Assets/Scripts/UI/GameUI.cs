@@ -21,6 +21,8 @@ public class GameUI : MonoBehaviour
 
     [Header("Buttons")]
     public Button endTurnButton;
+    public Button speedButton;
+    public Button adButton;
 
     [Header("Building Panel")]
     public GameObject buildingPanel;
@@ -34,6 +36,7 @@ public class GameUI : MonoBehaviour
     [Header("Settings")]
     public Button     settingsToggleButton;
     public GameObject settingsPanel;
+    public Button     exitButton;
     public UnityEngine.UI.Slider volumeSlider;
     public TextMeshProUGUI conditionsOfVictoryText;
 
@@ -47,6 +50,7 @@ public class GameUI : MonoBehaviour
 
     private Action   _eventOnConfirm;
     private bool     _isVictory;
+    private bool     _is2x;
     private Unit     _displayedUnit;
     // 대화 진행 상태
     private string[] _dialogueLines;
@@ -104,6 +108,8 @@ public class GameUI : MonoBehaviour
     private void Start()
     {
         endTurnButton.onClick.AddListener(() => PlayerInputHandler.Instance.OnEndTurnPressed());
+        speedButton?.onClick.AddListener(ToggleSpeed);
+        adButton?.onClick.AddListener(OnAdButtonClicked);
 
         TurnManager.Instance.OnPlayerTurnStart += RefreshForPlayerTurn;
         TurnManager.Instance.OnAllyTurnStart   += RefreshForAllyTurn;
@@ -118,9 +124,9 @@ public class GameUI : MonoBehaviour
         if (conditionsOfVictoryText != null && GameManager.Instance?.currentMap != null)
             conditionsOfVictoryText.text = GameManager.Instance.currentMap.winLossDescription;
 
-        // ExitButton — 스테이지 선택으로 나가기
-        var exitBtn = settingsPanel?.transform.Find("ExitButton")?.GetComponent<Button>();
-        exitBtn?.onClick.AddListener(ExitToStageSelect);
+        if (exitButton == null)
+            exitButton = settingsPanel?.transform.Find("ExitButton")?.GetComponent<Button>();
+        exitButton?.onClick.AddListener(ExitToStageSelect);
 
         // CloseButton — 설정창 닫기
         var closeBtn = settingsPanel?.transform.Find("CloseButton")?.GetComponent<Button>();
@@ -140,6 +146,20 @@ public class GameUI : MonoBehaviour
 
         HideUnitInfo();
         UpdateGold();
+    }
+
+    // ── Speed toggle ──────────────────────────────────────────
+    private void ToggleSpeed()
+    {
+        _is2x = !_is2x;
+        Time.timeScale = _is2x ? 2f : 1f;
+        var label = speedButton.GetComponentInChildren<TextMeshProUGUI>();
+        if (label != null) label.text = _is2x ? "2배속" : "1배속";
+    }
+
+    private void OnDestroy()
+    {
+        Time.timeScale = 1f;
     }
 
     // ── Settings ──────────────────────────────────────────────
@@ -168,8 +188,9 @@ public class GameUI : MonoBehaviour
     // ── Turn display ──────────────────────────────────────────
     private void RefreshForPlayerTurn()
     {
-        turnText.text               = $"{TurnManager.Instance.TurnNumber}턴 - 플레이어";
-        endTurnButton.interactable  = true;
+        turnText.text              = $"{TurnManager.Instance.TurnNumber}턴 - 플레이어";
+        endTurnButton.interactable = true;
+        RefreshAdButton();
         UpdateGold();
     }
 
@@ -177,12 +198,32 @@ public class GameUI : MonoBehaviour
     {
         turnText.text              = $"{TurnManager.Instance.TurnNumber}턴 - 동맹";
         endTurnButton.interactable = false;
+        if (adButton != null) adButton.interactable = false;
     }
 
     private void RefreshForEnemyTurn()
     {
         turnText.text              = $"{TurnManager.Instance.TurnNumber}턴 - 적";
         endTurnButton.interactable = false;
+        if (adButton != null) adButton.interactable = false;
+    }
+
+    public void RefreshAdButton()
+    {
+        if (adButton == null) return;
+        bool canShow = AdManager.Instance != null && AdManager.Instance.CanShowAd;
+        adButton.interactable = canShow;
+        var label = adButton.GetComponentInChildren<TextMeshProUGUI>();
+        if (label != null)
+        {
+            int remaining = AdManager.Instance?.AdsRemaining ?? 0;
+            label.text = $"광고 ({remaining})";
+        }
+    }
+
+    private void OnAdButtonClicked()
+    {
+        AdManager.Instance?.ShowRewardedAd();
     }
 
     private void UpdateGold() =>

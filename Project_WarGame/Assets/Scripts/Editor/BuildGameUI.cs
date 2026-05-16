@@ -110,6 +110,30 @@ public class BuildGameUI
             img.type   = Image.Type.Sliced;
         }
 
+        // ── 배속 버튼 (턴종료 버튼 왼쪽) ─────────────────────
+        var speedBtn = MakeButtonBox(canvasGO, "SpeedButton", "1배속", fontAsset, 22,
+            new Vector2(1,0), new Vector2(1,0), new Vector2(0.5f,0.5f),
+            new Vector2(-320, 80), new Vector2(150, 60),
+            Color.white);
+        if (btnSprite != null)
+        {
+            var img = speedBtn.GetComponent<Image>();
+            img.sprite = btnSprite;
+            img.type   = Image.Type.Sliced;
+        }
+
+        // ── 광고 버튼 (배속 버튼 왼쪽) ──────────────────────────
+        var adBtn = MakeButtonBox(canvasGO, "AdButton", "광고 (3)", fontAsset, 22,
+            new Vector2(1,0), new Vector2(1,0), new Vector2(0.5f,0.5f),
+            new Vector2(-480, 80), new Vector2(150, 60),
+            Color.white);
+        if (btnSprite != null)
+        {
+            var img = adBtn.GetComponent<Image>();
+            img.sprite = btnSprite;
+            img.type   = Image.Type.Sliced;
+        }
+
         // ── 유닛 정보 패널 (좌하단) ───────────────────────────
         var unitPanel = MakePanel(canvasGO, "UnitInfoPanel",
             new Vector2(0,0), new Vector2(0,0), new Vector2(0,0),
@@ -246,10 +270,14 @@ public class BuildGameUI
         eventPanel.SetActive(false);
 
         // ── GameUI 컴포넌트 연결 ──────────────────────────────
+        canvasGO.AddComponent<AdManager>();
+
         var gameUI = canvasGO.AddComponent<GameUI>();
         gameUI.turnText             = turnText;
         gameUI.goldText             = goldText;
         gameUI.endTurnButton        = endTurnBtn;
+        gameUI.speedButton          = speedBtn;
+        gameUI.adButton             = adBtn;
         gameUI.unitInfoPanel        = unitPanel;
         gameUI.unitNameText         = unitName;
         gameUI.unitHpText           = unitHp;
@@ -261,6 +289,7 @@ public class BuildGameUI
         gameUI.defeatPanel          = defeatPanel;
         gameUI.settingsToggleButton = settingsBtn;
         gameUI.settingsPanel        = settingsPanel;
+        gameUI.exitButton           = settingsPanel.transform.Find("ExitButton")?.GetComponent<Button>();
         gameUI.volumeSlider         = slider;
         gameUI.eventPanel           = eventPanel;
         gameUI.eventText            = eventText;

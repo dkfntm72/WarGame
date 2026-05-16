@@ -12,11 +12,13 @@ public class BuildingData : ScriptableObject
     public Sprite neutralSprite;
     public Sprite playerSprite;
     public Sprite enemySprite;
+    public Sprite allySprite;
 
     public Sprite GetSprite(Faction faction) => faction switch
     {
         Faction.Player => playerSprite,
         Faction.Enemy  => enemySprite,
+        Faction.Ally   => allySprite != null ? allySprite : neutralSprite,
         _              => neutralSprite
     };
 }
